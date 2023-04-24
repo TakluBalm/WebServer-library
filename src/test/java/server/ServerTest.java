@@ -39,12 +39,16 @@ class ServerTest {
     }
     @Test
     void routeTest() throws Exception{
-        @Route(route ="gautam")
-        class BabuMoshai extends BaseController {
-
+        @Controller(URL = "/prakhar")
+        class BabuMoshai {
+            @MethodHandler(method = "GET")
+            void tp(){
+                String time = "pass";
+                return;
+            }
         }
-        class JugalPrakharTanuj extends BaseController{
-
+        @Controller(URL = "/tanuj")
+        class JugalPrakharTanuj {
         }
 
         Socket ss = new Socket("localhost", 8080);

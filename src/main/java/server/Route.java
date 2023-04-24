@@ -1,16 +1,11 @@
 package server;
 
+public class Route {
+    private String URL;
+    private String Method;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-
-
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Route {
-    String route() default "/";
+    public Route(String URL, String Method){
+        this.URL = URL;
+        this.Method = Method;
+    }
 }
-

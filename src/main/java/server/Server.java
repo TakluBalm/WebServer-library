@@ -1,18 +1,17 @@
 package server;
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
-import io.github.classgraph.ClassInfoList;
-import io.github.classgraph.ScanResult;
+import io.github.classgraph.*;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.*;
+import java.util.HashMap;
 
 public class Server {
 
     ServerSocket socket;
     Thread master;
     boolean running;
-    ClassInfoList sub_BC;
+    ClassInfoList controllerClasses;
     class WhiteColonial implements Runnable{
         @Override
         public void run() {
@@ -58,7 +57,6 @@ public class Server {
                     writer.println(inputLine);
                     inputLine = reader.readLine();
                 }
-                BaseController.RWK("nalla", "berozgar");
 
                 // close the client socket
                 clientSocket.close();
@@ -72,29 +70,26 @@ public class Server {
     }
 
     public void start() throws IOException {
+        HashMap<Route, Method> mapper = new HashMap<Route, Method>();
         try {
             ScanResult sr = new ClassGraph().enableAllInfo().scan();
             sr.getAllClasses().forEach(classInfo -> {
-                if (classInfo.isStandardClass() && classInfo.isPublic() && !classInfo.isAbstract()&& classInfo.getName().equals("server.BaseController")){
-                    sub_BC = classInfo.getSubclasses();
-                    if(sub_BC.isEmpty()){
-                        System.out.println("No subclasses of BaseController.");
-                    }else{
-                        int cnt = 0;
-                        for(ClassInfo subclass: sub_BC){
-//                            System.out.println(subclass.getAnnotations());
-//                            System.out.println(subclass.getAnnotationInfo("Route"));
-//                            System.out.println();
-
-                            if((subclass.getAnnotationInfo("server.Route")!=null)) cnt++;
+                AnnotationInfo u = classInfo.getAnnotationInfo("server.Controller");
+                if(u != null){
+                    Class<?> annotatedClass = classInfo.loadClass();
+                    Method[] classMethods = annotatedClass.getDeclaredMethods();
+                    for(Method method: classMethods){
+                        if(method.isAnnotationPresent(MethodHandler.class)){
+                            Controller controller = annotatedClass.getAnnotation(server.Controller.class);
+                            MethodHandler handler = method.getAnnotation(server.MethodHandler.class);
+                            mapper.put(new Route(controller.URL(), handler.method()), method);
                         }
-                        System.out.println(cnt);
                     }
                 }
-
             });
-        } catch (Exception e){
-
+            System.out.println(mapper);
+        } catch (Exception e) {
+            System.exit(-1);
         }
         socket = new ServerSocket(8080);
         running = true;

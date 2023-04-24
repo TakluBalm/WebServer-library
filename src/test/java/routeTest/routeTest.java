@@ -3,7 +3,7 @@ package routeTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import server.BaseController;
+import server.Controller;
 import server.Server;
 
 import java.io.*;
@@ -26,10 +26,12 @@ public class routeTest {
 
     @Test
     void routeTest() throws Exception{
-        class BabuMoshai extends BaseController {
+        @Controller(URL = "/tanuj")
+        class BabuMoshai {
 
         }
-        class JugalPrakharTanuj extends BaseController{
+        @Controller(URL = "/prakhar")
+        class JugalPrakharTanuj {
 
         }
 
