@@ -2,6 +2,7 @@ package server;
 import io.github.classgraph.*;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.util.HashMap;
@@ -70,7 +71,7 @@ public class Server {
     }
 
     public void start() throws IOException {
-        HashMap<Route, Method> mapper = new HashMap<Route, Method>();
+        HashMap<Route, Invocation> mapper = new HashMap<Route, Invocation>();
         try {
             ScanResult sr = new ClassGraph().enableAllInfo().scan();
             sr.getAllClasses().forEach(classInfo -> {
@@ -78,17 +79,32 @@ public class Server {
                 if(u != null){
                     Class<?> annotatedClass = classInfo.loadClass();
                     Method[] classMethods = annotatedClass.getDeclaredMethods();
-                    for(Method method: classMethods){
-                        if(method.isAnnotationPresent(MethodHandler.class)){
-                            Controller controller = annotatedClass.getAnnotation(server.Controller.class);
-                            MethodHandler handler = method.getAnnotation(server.MethodHandler.class);
-                            mapper.put(new Route(controller.URL(), handler.method()), method);
+
+                    try {
+
+                        Constructor c=annotatedClass.getConstructor();
+                        Object o = c.newInstance();
+
+                        for(Method callableMethod: classMethods){
+                            if(callableMethod.isAnnotationPresent(MethodHandler.class)){
+                                Controller controller = annotatedClass.getAnnotation(server.Controller.class);
+                                MethodHandler handler = callableMethod.getAnnotation(server.MethodHandler.class);
+                                mapper.put(new Route(controller.URL(), handler.method()), new Invocation(o, callableMethod));
+                            }
                         }
+
+                    } catch (Exception e) {
+                        System.out.println(e);
                     }
                 }
             });
             System.out.println(mapper);
+            System.out.println(mapper.get(new Route("/prakhar", "GET")));
+            mapper.get(new Route("/prakhar", "GET")).run(null);
+
+
         } catch (Exception e) {
+            System.out.println(e);
             System.exit(-1);
         }
         socket = new ServerSocket(8080);

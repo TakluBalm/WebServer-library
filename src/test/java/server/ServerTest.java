@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,17 +40,6 @@ class ServerTest {
     }
     @Test
     void routeTest() throws Exception{
-        @Controller(URL = "/prakhar")
-        class BabuMoshai {
-            @MethodHandler(method = "GET")
-            void tp(){
-                String time = "pass";
-                return;
-            }
-        }
-        @Controller(URL = "/tanuj")
-        class JugalPrakharTanuj {
-        }
 
         Socket ss = new Socket("localhost", 8080);
         InputStream in = ss.getInputStream();
@@ -57,10 +47,20 @@ class ServerTest {
         PrintWriter writer = new PrintWriter(out, true);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-        String msg = "This is a routing message";
+        String msg = "GET /example HTTP/1.1\r\n" +
+                "Host: www.example.com\r\n" +
+                "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0\r\n" +
+                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n" +
+                "Accept-Language: en-US,en;q=0.5\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n" +
+                "Connection: keep-alive\r\n" +
+                "Cookie: sessionId=1234abcd; userId=5678efgh\r\n";
+
         writer.println(msg);
-        String response = reader.readLine();
+        Stream<String> response = reader.lines();
         ss.close();
         assertTrue(response.equals(msg));
+
+
     }
 }
