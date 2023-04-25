@@ -20,8 +20,8 @@ public class Server {
                 while (running) {
                     try {// wait for a client to connect
                         Socket clientSocket = socket.accept();
-
-                        BlackSlave servant = new BlackSlave(clientSocket);
+                        HTTPSocket clientHttpSocket = new HTTPSocket(clientSocket);
+                        BlackSlave servant = new BlackSlave(clientHttpSocket);
                         Thread slave = new Thread(servant);
                         slave.start();
                         slave.join();
@@ -35,32 +35,25 @@ public class Server {
     }
 
     class BlackSlave implements Runnable{
-
-        Socket clientSocket;
-        public BlackSlave(Socket clientsocket){
+        HTTPSocket clientSocket;
+        public BlackSlave(HTTPSocket clientsocket){
             this.clientSocket = clientsocket;
         }
         @Override
         public void run() {
             try{
                 System.out.println("Black nigga instantiated.");
-                // create input and output streams for the client socket
-                InputStream inputStream = clientSocket.getInputStream();
-                OutputStream outputStream = clientSocket.getOutputStream();
 
-                // read data from the client and send a response
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                PrintWriter writer = new PrintWriter(outputStream, true);
-
-                String inputLine = reader.readLine();
-                while (inputLine != null) {
-                    System.out.println("Received message: " + inputLine);
-                    writer.println(inputLine);
-                    inputLine = reader.readLine();
+                HTTPSocket.Request newRequest = clientSocket.waitRequest();
+                if(newRequest != null){
+                    System.out.println(newRequest);
+                    clientSocket.send("Valid HTTP");
+                }else{
+                    clientSocket.send("Invalid HTTP");
                 }
 
                 // close the client socket
-                clientSocket.close();
+                clientSocket.closeConnection();
             } catch (Exception e){
                 System.out.println(
                         "Yee failed black nigger because of "+

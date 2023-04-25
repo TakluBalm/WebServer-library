@@ -36,7 +36,7 @@ class ServerTest {
         writer.println(msg);
         String response = reader.readLine();
         ss.close();
-        assertTrue(response.equals(msg));
+        assertTrue(response.equals("Invalid HTTP"));
     }
     @Test
     void routeTest() throws Exception{
@@ -57,10 +57,8 @@ class ServerTest {
                 "Cookie: sessionId=1234abcd; userId=5678efgh\r\n";
 
         writer.println(msg);
-        Stream<String> response = reader.lines();
+        String response = reader.readLine();
         ss.close();
-        assertTrue(response.equals(msg));
-
-
+        assertTrue(response.equals("Valid HTTP"));
     }
 }
