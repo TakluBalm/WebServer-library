@@ -1,18 +1,22 @@
 package server;
 
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.*;
+
+import server.exceptions.HttpInvalidException;
+import server.exceptions.HttpRequestTimeoutException;
 
 public class HTTPSocket {
     private Socket socket;
     private BufferedReader reader;
     private PrintWriter writer;
 
-    public HTTPSocket(Socket serversocket){
+    public HTTPSocket(Socket serversocket, int timeOut){
         socket = serversocket;
         try {
+			serversocket.setSoTimeout(timeOut);
             InputStream inputStream = serversocket.getInputStream();
             OutputStream outputStream = serversocket.getOutputStream();
             reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -24,19 +28,18 @@ public class HTTPSocket {
     }
 
     public class Request {
-        private String method;
-        private String path;
+		private Route route;
         private String version;
         private Map<String, String> headers;
         private List<String> cookies;
         private String body;
 
         public String getMethod() {
-            return method;
+            return route.Method;
         }
 
         public String getPath() {
-            return path;
+            return route.Path;
         }
 
         public String getVersion() {
@@ -58,7 +61,7 @@ public class HTTPSocket {
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append(method).append(" ").append(path).append(" ").append(version).append("\n");
+            builder.append(route.Method).append(" ").append(route.Path).append(" ").append(version).append("\n");
             for (String key : headers.keySet()) {
                 builder.append(key).append(": ").append(headers.get(key)).append("\n");
             }
@@ -67,12 +70,24 @@ public class HTTPSocket {
             return builder.toString();
         }
 
-        public Request() throws IOException {
+        public Request() throws HttpInvalidException, HttpRequestTimeoutException, IOException {
             // Parse request line
             try {
-                String[] requestLine = (reader.readLine()).split(" ");
-                method = requestLine[0];
-                path = requestLine[1];
+				String[] requestLine;
+				while(true){
+					try{
+						requestLine = (reader.readLine()).split(" ");
+						break;
+					}catch (SocketTimeoutException se){
+						continue;
+					}
+				}
+
+				if(requestLine.length != 3){
+					throw new HttpInvalidException("Invalid HTTP request");
+				}
+
+                route = new Route(requestLine[1], requestLine[0]);
                 version = requestLine[2];
 
                 // Parse headers
@@ -80,27 +95,35 @@ public class HTTPSocket {
                 cookies = new ArrayList<>();
 
                 String line;
-                while ((line = reader.readLine()).length() > 0) {
-                    String[] header = line.split(": ");
-                    String headerName = header[0];
-                    String headerValue = header[1];
-                    headers.put(headerName, headerValue);
-                    if (headerName.equalsIgnoreCase("cookie")) {
-                        cookies.addAll(Arrays.asList(headerValue.split("; ")));
-                    }
-                }
+				try{
+					while ((line = reader.readLine()).length() > 0) {
+						String[] header = line.split(": ");
+						if(header.length != 2){
+							throw new HttpInvalidException("Invalid HTTP request");
+						}
+						String headerName = header[0];
+						String headerValue = header[1];
+						headers.put(headerName, headerValue);
+						if (headerName.equalsIgnoreCase("cookie")) {
+							cookies.addAll(Arrays.asList(headerValue.split("; ")));
+						}
+					}
+				}catch(SocketTimeoutException e){
+					throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
+				}
 
                 // Parse body
                 body = "";
-                String contentLen = headers.get("Content-length");
+                String contentLen = headers.get("Content-Length");
                 int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;
-                StringBuilder bodyBuilder = new StringBuilder();
-                for (int i = 0; i < bodyLen; i++) {
-                    bodyBuilder.append(reader.readLine());
-                }
-                body = bodyBuilder.toString();
-            } catch (Exception e){
-                System.out.println(e);
+				char[] charBuf = new char[bodyLen];
+				try{
+					reader.read(charBuf);
+					body = new String(charBuf);
+				}catch(SocketTimeoutException e){
+					throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
+				}
+            } catch (IOException e){
                 throw e;
             }
         }
@@ -110,7 +133,7 @@ public class HTTPSocket {
     public Request waitRequest(){
         try {
             return new Request();
-        } catch (IOException e) {
+        } catch (Exception e) {
             return null;
         }
     }

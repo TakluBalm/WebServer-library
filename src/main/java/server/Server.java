@@ -20,7 +20,7 @@ public class Server {
                 while (running) {
                     try {// wait for a client to connect
                         Socket clientSocket = socket.accept();
-                        HTTPSocket clientHttpSocket = new HTTPSocket(clientSocket);
+                        HTTPSocket clientHttpSocket = new HTTPSocket(clientSocket, 2000);
                         BlackSlave servant = new BlackSlave(clientHttpSocket);
                         Thread slave = new Thread(servant);
                         slave.start();
@@ -75,7 +75,7 @@ public class Server {
 
                     try {
 
-                        Constructor c=annotatedClass.getConstructor();
+                        Constructor<?> c = annotatedClass.getConstructor();
                         Object o = c.newInstance();
 
                         for(Method callableMethod: classMethods){
