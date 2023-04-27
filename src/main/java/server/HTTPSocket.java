@@ -27,122 +27,89 @@ public class HTTPSocket {
         }
     }
 
-    public class Request {
-		private Route route;
-        private String version;
-        private Map<String, String> headers;
-        private List<String> cookies;
-        private String body;
+	public Request waitRequest() {
+		// Parse request line
+		try {
+			String[] requestLine;
+			while(true){
+				try{
+					requestLine = (reader.readLine()).split(" ");
+					break;
+				}catch (SocketTimeoutException se){
+					continue;
+				}
+			}
 
-        public String getMethod() {
-            return route.Method;
-        }
+			if(requestLine.length != 3){
+				throw new HttpInvalidException("Invalid HTTP request");
+			}
 
-        public String getPath() {
-            return route.Path;
-        }
+			String method = requestLine[0];
+			String[] uri = requestLine[1].split("\\?");
+			if(uri.length > 2){
+				throw new HttpInvalidException("Invalid HTTP request");
+			}
 
-        public String getVersion() {
-            return version;
-        }
+			Route route = new Route(method, uri[0]);
+			String version = requestLine[2];
 
-        public Map<String, String> getHeaders() {
-            return headers;
-        }
+			Map<String, String> params = new HashMap<>();
+			if(uri.length == 2){
+				String[] parameters = uri[1].split("&");
+				for(int i = 0; i < parameters.length; i++){
+					String[] p = parameters[i].split("=");
+					if(p.length != 2) throw new HttpInvalidException("Invalid Exception");
+					params.put(p[0], p[1]);
+				}
+			}
 
-        public List<String> getCookies() {
-            return cookies;
-        }
 
-        public String getBody() {
-            return body;
-        }
+			// Parse headers
+			Map<String, String> headers = new HashMap<>();
+			List<String> cookies = new ArrayList<>();
 
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append(route.Method).append(" ").append(route.Path).append(" ").append(version).append("\n");
-            for (String key : headers.keySet()) {
-                builder.append(key).append(": ").append(headers.get(key)).append("\n");
-            }
-            builder.append("\n");
-            builder.append(body);
-            return builder.toString();
-        }
-
-        public Request() throws HttpInvalidException, HttpRequestTimeoutException, IOException {
-            // Parse request line
-            try {
-				String[] requestLine;
-				while(true){
-					try{
-						requestLine = (reader.readLine()).split(" ");
-						break;
-					}catch (SocketTimeoutException se){
-						continue;
+			String line;
+			try{
+				while ((line = reader.readLine()).length() > 0) {
+					String[] header = line.split(": ");
+					if(header.length != 2){
+						throw new HttpInvalidException("Invalid HTTP request");
+					}
+					String headerName = header[0];
+					String headerValue = header[1];
+					headers.put(headerName, headerValue);
+					if (headerName.equalsIgnoreCase("cookie")) {
+						cookies.addAll(Arrays.asList(headerValue.split("; ")));
 					}
 				}
+			}catch(SocketTimeoutException e){
+				throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
+			}
 
-				if(requestLine.length != 3){
-					throw new HttpInvalidException("Invalid HTTP request");
-				}
+			// Parse body
+			String body = "";
+			String contentLen = headers.get("Content-Length");
+			int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;
+			char[] charBuf = new char[bodyLen];
+			try{
+				reader.read(charBuf);
+				body = new String(charBuf);
+			}catch(SocketTimeoutException e){
+				throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
+			}
 
-                route = new Route(requestLine[1], requestLine[0]);
-                version = requestLine[2];
-
-                // Parse headers
-                headers = new HashMap<>();
-                cookies = new ArrayList<>();
-
-                String line;
-				try{
-					while ((line = reader.readLine()).length() > 0) {
-						String[] header = line.split(": ");
-						if(header.length != 2){
-							throw new HttpInvalidException("Invalid HTTP request");
-						}
-						String headerName = header[0];
-						String headerValue = header[1];
-						headers.put(headerName, headerValue);
-						if (headerName.equalsIgnoreCase("cookie")) {
-							cookies.addAll(Arrays.asList(headerValue.split("; ")));
-						}
-					}
-				}catch(SocketTimeoutException e){
-					throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
-				}
-
-                // Parse body
-                body = "";
-                String contentLen = headers.get("Content-Length");
-                int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;
-				char[] charBuf = new char[bodyLen];
-				try{
-					reader.read(charBuf);
-					body = new String(charBuf);
-				}catch(SocketTimeoutException e){
-					throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
-				}
-            } catch (IOException e){
-                throw e;
-            }
-        }
-
-    }
-
-    public Request waitRequest(){
-        try {
-            return new Request();
-        } catch (Exception e) {
-            return null;
-        }
+			return new Request(route, version, headers, cookies, params, body);
+		} catch (Exception e){
+			System.out.println(e);
+			return null;
+		}
     }
 
     public void closeConnection() throws IOException {
         socket.close();
     }
 
-    public void send(String msg){
+    public void sendResponse(Response msg){
         writer.println(msg);
     }
 }
