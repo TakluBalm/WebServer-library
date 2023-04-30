@@ -1,12 +1,8 @@
 package server;
-import java.nio.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Base64;
 
 public class ImageResponse extends Response {
     public String imagePath = "";
@@ -16,8 +12,7 @@ public class ImageResponse extends Response {
         this.imagePath = imagePath;
         String[] splitPath = imagePath.split("\\.");
         this.extension = splitPath[splitPath.length - 1];
-        System.out.println(extension);
-        this.setHeader("Content-Type", "image/" + extension + "; charset=UTF-8");
+        this.setHeader("Content-Type", "image/" + extension);
         this.setBody(this.imagePath);
     }
 

@@ -119,6 +119,9 @@ public class HTTPSocket {
 		writer.flush();
 
 		// Full body system
-		outputStream.write(msg.getBody());
+		byte[] body = msg.getBody();
+		if(body != null && body.length > 0){
+			outputStream.write(msg.getBody());
+		}
     }
 }

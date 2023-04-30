@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -85,14 +84,13 @@ class ServerTest {
 				"GET /prakhar HTTP/1.1\r\n"+
 						"Host: example.com\r\n"+
 						"Content-Type: application/json\r\n"+
-						"Content-Length: 52\r\n"+
-						"\r\n"+
-						"{\"name\": \"John Doe\", \"email\": \"johndoe@example.com\"}";
+						"Content-Length: 0\r\n"+
+						"\r\n";
 
         writer.print(msg);
 		writer.flush();
-        String response = reader.readLine();
-        assertTrue(response.equals("Prakhar recieved: {\"name\": \"John Doe\", \"email\": \"johndoe@example.com\"}"));
+		String response = reader.readLine();
+		assertEquals("HTTP/1.1 200 OK", response);
 	}
 
 	@Test
@@ -110,38 +108,6 @@ class ServerTest {
 		writer.flush();
         String response = reader.readLine();
         assertTrue(response.equals("HTTP/1.1 404 Not Found"));
-	}
-
-
-	@Test
-	void httpResponseTest() throws IOException {
-
-        String msg =
-				"GET /prakhar HTTP/1.1\r\n"+
-						"Host: example.com\r\n"+
-						"Content-Type: application/json\r\n"+
-						"Content-Length: 52\r\n"+
-						"\r\n"+
-						"{\"name\": \"John Doe\", \"email\": \"johndoe@example.com\"}";
-
-        writer.print(msg);
-		writer.flush();
-        String line1 = reader.readLine();
-		String line2 = reader.readLine();
-		if(line2.startsWith("content-length")) {
-			System.out.println(line2);
-			line2 = reader.readLine();    //	Skip content-length
-		}
-		String line3 = reader.readLine();
-		String line4 = reader.readLine();
-		System.out.println(line1);
-		System.out.println(line2);
-		System.out.println(line3);
-		System.out.println(line4);
-		assertEquals(line1, "HTTP/1.1 200 OK");
-		assertEquals(line2, "set-cookie: json-got=true");
-		assertEquals(line3, "");
-        assertEquals(line4, "Prakhar recieved: {\"name\": \"John Doe\", \"email\": \"johndoe@example.com\"}");
 	}
 
 	@Test

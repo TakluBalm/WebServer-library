@@ -99,7 +99,7 @@ public class Response {
 		StringBuilder msgBuilder = new StringBuilder();
 
 		//	Content-length System
-		int contentLen = body.length;
+		int contentLen = (body != null)?body.length:0;
 		if(contentLen > 0){
 			String setLen = headers.get("content-length");
 			if(setLen == null || Integer.parseInt(setLen) != contentLen){

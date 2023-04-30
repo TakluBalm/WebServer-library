@@ -1,0 +1,243 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > Response</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: Response (server)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Response</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (6/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.2%
+  </span>
+  <span class="absValue">
+    (81/86)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;public class Response {
+<b class="fc">&nbsp;	private String version = &quot;1.1&quot;;</b>
+<b class="fc">&nbsp;    private int statusCode = 200;</b>
+<b class="fc">&nbsp;    private HashMap&lt;String, String&gt; headers = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;	public HashMap&lt;String, String&gt; cookies = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    public String body =  &quot;&quot;;</b>
+<b class="fc">&nbsp;	int cookie_cnt = 0;</b>
+&nbsp;
+<b class="fc">&nbsp;	private static HashMap&lt;Integer, String&gt; statusMessages = new HashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;	static{
+<b class="fc">&nbsp;		statusMessages.put(69, &quot;System&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(100, &quot;Continue&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(101, &quot;Switching Protocols&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(200, &quot;OK&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(201, &quot;Created&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(202, &quot;Accepted&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(203, &quot;Non-Authoritative Information&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(204, &quot;No Content&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(205, &quot;Reset Content&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(206, &quot;Partial Content&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(300, &quot;Multiple Choices&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(301, &quot;Moved Permanently&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(302, &quot;Found&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(303, &quot;See Other&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(304, &quot;Not Modified&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(305, &quot;Use Proxy&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(307, &quot;Temporary Redirect&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(400, &quot;Bad Request&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(401, &quot;Unauthorized&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(402, &quot;Payment Required&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(403, &quot;Forbidden&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(404, &quot;Not Found&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(405, &quot;Method Not Allowed&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(406, &quot;Not Acceptable&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(407, &quot;Proxy Authentication Required&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(408, &quot;Request Timeout&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(409, &quot;Conflict&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(410, &quot;Gone&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(411, &quot;Length Required&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(412, &quot;Precondition Failed&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(413, &quot;Payload Too Large&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(414, &quot;URI Too Long&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(415, &quot;Unsupported Media Type&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(416, &quot;Range Not Satisfiable&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(417, &quot;Expectation Failed&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(500, &quot;Internal Server Error&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(501, &quot;Not Implemented&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(502, &quot;Bad Gateway&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(503, &quot;Service Unavailable&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(504, &quot;Gateway Timeout&quot;);</b>
+<b class="fc">&nbsp;		statusMessages.put(505, &quot;HTTP Version Not Supported&quot;);</b>
+&nbsp;		
+&nbsp;	}
+&nbsp;
+<b class="fc">&nbsp;    public Response(String version) {</b>
+<b class="fc">&nbsp;		this.version = version;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;	public Response setHeader(String field, String value){
+<b class="nc">&nbsp;		this.headers.put(field.toLowerCase(), value);</b>
+<b class="nc">&nbsp;		return this;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String getHeaderValue(String header_field){
+<b class="nc">&nbsp;		return headers.get(header_field.toLowerCase());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getStatusCode(){
+<b class="nc">&nbsp;		return statusCode;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Response setStatusCode(int code){
+<b class="fc">&nbsp;		this.statusCode = code;</b>
+<b class="fc">&nbsp;		return this;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Response setCookie(String cookieName, String cookieValue){
+<b class="fc">&nbsp;		this.cookies.put(cookieName, cookieValue); </b>
+<b class="fc">&nbsp;		cookie_cnt++;</b>
+<b class="fc">&nbsp;		return this;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Response setBody(String body){
+<b class="fc">&nbsp;		this.body = body;</b>
+<b class="fc">&nbsp;		return this;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public String toString() {
+<b class="fc">&nbsp;		StringBuilder msgBuilder = new StringBuilder();</b>
+&nbsp;
+&nbsp;		//	Content-length System
+<b class="fc">&nbsp;		int contentLen = body.length();</b>
+<b class="fc">&nbsp;		if(contentLen &gt; 0){</b>
+<b class="fc">&nbsp;			String setLen = headers.get(&quot;content-length&quot;);</b>
+<b class="fc">&nbsp;			if(setLen == null || Integer.parseInt(setLen) != contentLen){</b>
+<b class="fc">&nbsp;				headers.put(&quot;content-length&quot;, contentLen+&quot;&quot;);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		//	Response Status
+<b class="fc">&nbsp;		msgBuilder.append(&quot;HTTP/&quot;).append(version).append(&quot; &quot;).append(statusCode).append(&quot; &quot;).append(statusMessages.get(statusCode)).append(&quot;\r\n&quot;);</b>
+&nbsp;		
+&nbsp;		//	Header System
+<b class="fc">&nbsp;		Set&lt;String&gt; fields = headers.keySet();</b>
+<b class="fc">&nbsp;		for(String field: fields){</b>
+<b class="fc">&nbsp;			msgBuilder.append(field).append(&quot;: &quot;).append(headers.get(field)).append(&quot;\r\n&quot;);</b>
+<b class="fc">&nbsp;		}</b>
+&nbsp;
+&nbsp;		// Cookie System
+<b class="fc">&nbsp;		Set&lt;String&gt; cookieNames = cookies.keySet();</b>
+<b class="fc">&nbsp;		if(cookieNames.size() &gt; 0){</b>
+<b class="fc">&nbsp;			int cnt = 1;</b>
+<b class="fc">&nbsp;			msgBuilder.append(&quot;set-cookie: &quot;);</b>
+<b class="fc">&nbsp;			for(String cookieName: cookieNames){</b>
+<b class="fc">&nbsp;				msgBuilder.append(cookieName).append(&quot;=&quot;).append(cookies.get(cookieName));</b>
+<b class="fc">&nbsp;				if(cnt != cookie_cnt){</b>
+<b class="nc">&nbsp;					msgBuilder.append(&quot;; &quot;);</b>
+&nbsp;				}
+<b class="fc">&nbsp;				cnt++;</b>
+<b class="fc">&nbsp;			}</b>
+<b class="fc">&nbsp;			msgBuilder.append(&quot;\r\n&quot;);</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		// Header End System
+<b class="fc">&nbsp;		msgBuilder.append(&quot;\r\n&quot;);</b>
+&nbsp;
+&nbsp;		//	Full body System
+<b class="fc">&nbsp;		if(body != null)	msgBuilder.append(body);</b>
+&nbsp;
+<b class="fc">&nbsp;		return msgBuilder.toString();</b>
+&nbsp;	}
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-04-27 18:34</div>
+</div>
+</body>
+</html>

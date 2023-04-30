@@ -1,0 +1,218 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > HTTPSocket</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: HTTPSocket (server)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">HTTPSocket</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (45/60)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.net.Socket;
+&nbsp;import java.net.SocketTimeoutException;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import server.exceptions.HttpInvalidException;
+&nbsp;import server.exceptions.HttpRequestTimeoutException;
+&nbsp;
+&nbsp;public class HTTPSocket {
+&nbsp;    private Socket socket;
+&nbsp;    private BufferedReader reader;
+&nbsp;    private PrintWriter writer;
+&nbsp;
+<b class="fc">&nbsp;    public HTTPSocket(Socket serversocket, int timeOut){</b>
+<b class="fc">&nbsp;        socket = serversocket;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;			serversocket.setSoTimeout(timeOut);</b>
+<b class="fc">&nbsp;            InputStream inputStream = serversocket.getInputStream();</b>
+<b class="fc">&nbsp;            OutputStream outputStream = serversocket.getOutputStream();</b>
+<b class="fc">&nbsp;            reader = new BufferedReader(new InputStreamReader(inputStream));</b>
+<b class="fc">&nbsp;            writer = new PrintWriter(outputStream, true);</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            System.out.println(e);</b>
+<b class="nc">&nbsp;            System.exit(-1);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;	public Request waitRequest() {
+&nbsp;		// Parse request line
+&nbsp;		try {
+&nbsp;			String[] requestLine;
+&nbsp;			while(true){
+&nbsp;				try{
+<b class="fc">&nbsp;					requestLine = (reader.readLine()).split(&quot; &quot;);</b>
+<b class="fc">&nbsp;					break;</b>
+<b class="nc">&nbsp;				}catch (SocketTimeoutException se){</b>
+<b class="nc">&nbsp;					continue;</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;
+<b class="fc">&nbsp;			if(requestLine.length != 3){</b>
+<b class="nc">&nbsp;				throw new HttpInvalidException(&quot;Invalid HTTP request&quot;);</b>
+&nbsp;			}
+&nbsp;
+<b class="fc">&nbsp;			String method = requestLine[0];</b>
+<b class="fc">&nbsp;			String[] uri = requestLine[1].split(&quot;\\?&quot;);</b>
+<b class="fc">&nbsp;			if(uri.length &gt; 2){</b>
+<b class="nc">&nbsp;				throw new HttpInvalidException(&quot;Invalid HTTP request&quot;);</b>
+&nbsp;			}
+&nbsp;
+<b class="fc">&nbsp;			Route route = new Route(method, uri[0]);</b>
+<b class="fc">&nbsp;			String version = requestLine[2];</b>
+&nbsp;
+<b class="fc">&nbsp;			Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;			if(uri.length == 2){</b>
+<b class="nc">&nbsp;				String[] parameters = uri[1].split(&quot;&amp;&quot;);</b>
+<b class="nc">&nbsp;				for(int i = 0; i &lt; parameters.length; i++){</b>
+<b class="nc">&nbsp;					String[] p = parameters[i].split(&quot;=&quot;);</b>
+<b class="nc">&nbsp;					if(p.length != 2) throw new HttpInvalidException(&quot;Invalid Exception&quot;);</b>
+<b class="nc">&nbsp;					params.put(p[0], p[1]);</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;
+&nbsp;
+&nbsp;			// Parse headers
+<b class="fc">&nbsp;			Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;			List&lt;String&gt; cookies = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;			String line;
+&nbsp;			try{
+<b class="fc">&nbsp;				while ((line = reader.readLine()).length() &gt; 0) {</b>
+<b class="fc">&nbsp;					String[] header = line.split(&quot;: &quot;);</b>
+<b class="fc">&nbsp;					if(header.length != 2){</b>
+<b class="nc">&nbsp;						throw new HttpInvalidException(&quot;Invalid HTTP request&quot;);</b>
+&nbsp;					}
+<b class="fc">&nbsp;					String headerName = header[0];</b>
+<b class="fc">&nbsp;					String headerValue = header[1];</b>
+<b class="fc">&nbsp;					headers.put(headerName, headerValue);</b>
+<b class="fc">&nbsp;					if (headerName.equalsIgnoreCase(&quot;cookie&quot;)) {</b>
+<b class="fc">&nbsp;						cookies.addAll(Arrays.asList(headerValue.split(&quot;; &quot;)));</b>
+&nbsp;					}
+<b class="fc">&nbsp;				}</b>
+<b class="fc">&nbsp;			}catch(SocketTimeoutException e){</b>
+<b class="fc">&nbsp;				throw new HttpRequestTimeoutException(&quot;Connection Timed Out while waiting for Request&quot;);</b>
+<b class="fc">&nbsp;			}</b>
+&nbsp;
+&nbsp;			// Parse body
+<b class="fc">&nbsp;			String body = &quot;&quot;;</b>
+<b class="fc">&nbsp;			String contentLen = headers.get(&quot;Content-Length&quot;);</b>
+<b class="fc">&nbsp;			int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;</b>
+<b class="fc">&nbsp;			char[] charBuf = new char[bodyLen];</b>
+&nbsp;			try{
+<b class="fc">&nbsp;				reader.read(charBuf);</b>
+<b class="fc">&nbsp;				body = new String(charBuf);</b>
+<b class="nc">&nbsp;			}catch(SocketTimeoutException e){</b>
+<b class="nc">&nbsp;				throw new HttpRequestTimeoutException(&quot;Connection Timed Out while waiting for Request&quot;);</b>
+<b class="fc">&nbsp;			}</b>
+&nbsp;
+<b class="fc">&nbsp;			return new Request(route, version, headers, cookies, params, body);</b>
+<b class="fc">&nbsp;		} catch (Exception e){</b>
+<b class="fc">&nbsp;			System.out.println(e);</b>
+<b class="fc">&nbsp;			return null;</b>
+&nbsp;		}
+&nbsp;    }
+&nbsp;
+&nbsp;    public void closeConnection() throws IOException {
+<b class="fc">&nbsp;        socket.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void sendResponse(Response msg){
+<b class="fc">&nbsp;        writer.println(msg);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-04-27 18:34</div>
+</div>
+</body>
+</html>

@@ -56,8 +56,9 @@ public class Server {
                             Response response = new Response("1.1").setStatusCode(404);
                             clientSocket.sendResponse(response);
                         } else {
-                            ImageResponse ir = (ImageResponse) invocation.invoke(newRequest);
-                            clientSocket.sendResponse(ir);
+							Response r = (Response)invocation.invoke(newRequest);
+							System.out.println(r.headerString());
+                            clientSocket.sendResponse(r);
                         }
                     } else {
                         clientSocket.sendResponse(new Response("1.1").setStatusCode(400));
@@ -69,7 +70,7 @@ public class Server {
                     }
                 }
             } catch (Exception e){
-                System.out.println(e);
+                e.printStackTrace();
             }
         }
     }

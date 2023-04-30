@@ -159,8 +159,9 @@ public class RouteMap implements Map<Route, Invocation>{
 
 	@Override
 	public void putAll(Map<? extends Route, ? extends Invocation> m) {
-		// TODO Auto-generated Invocation stub
-		throw new UnsupportedOperationException("Unimplemented Invocation 'putAll'");
+		for(Entry<? extends Route, ? extends Invocation> entry: m.entrySet()){
+			this.put(entry.getKey(), entry.getValue());
+		}
 	}
 
 	@Override

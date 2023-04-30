@@ -1,0 +1,354 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > RouteMap</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: RouteMap (server)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RouteMap</td>
+<td class="coverageStat">
+  <span class="percent">
+    17.6%
+  </span>
+  <span class="absValue">
+    (3/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    27.9%
+  </span>
+  <span class="absValue">
+    (24/86)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">RouteMap$Node</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">RouteMap$RouteMapEntry</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    18.2%
+  </span>
+  <span class="absValue">
+    (4/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    28.1%
+  </span>
+  <span class="absValue">
+    (27/96)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+<b class="fc">&nbsp;public class RouteMap implements Map&lt;Route, Invocation&gt;{</b>
+&nbsp;
+&nbsp;	static class Node{
+&nbsp;		Map&lt;String, Node&gt; next;
+&nbsp;		Invocation value;
+&nbsp;
+<b class="fc">&nbsp;		Node(){</b>
+<b class="fc">&nbsp;			next = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;			value = null;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private class RouteMapEntry implements Entry&lt;Route, Invocation&gt;{
+&nbsp;
+&nbsp;		Route key;
+&nbsp;		Invocation value;
+&nbsp;
+&nbsp;		@Override
+&nbsp;		public Route getKey() {
+<b class="nc">&nbsp;			return key;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		@Override
+&nbsp;		public Invocation getValue() {
+<b class="nc">&nbsp;			return value;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		@Override
+&nbsp;		public Invocation setValue(Invocation invocation) {
+<b class="nc">&nbsp;			value = invocation;</b>
+<b class="nc">&nbsp;			return value;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		public RouteMapEntry(Route key, Invocation value){</b>
+<b class="nc">&nbsp;			this.key = key;</b>
+<b class="nc">&nbsp;			this.value = value;</b>
+&nbsp;		}
+&nbsp;	}
+<b class="fc">&nbsp;	private Node root = new Node();</b>
+<b class="fc">&nbsp;	private int size = 0;</b>
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void clear() {
+<b class="nc">&nbsp;		root = new Node();</b>
+<b class="nc">&nbsp;		size = 0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean containsKey(Object key) {
+<b class="nc">&nbsp;		return get(key) != null;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean containsValue(Object value) {
+<b class="nc">&nbsp;		return containsValue(root, value);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private boolean containsValue(Node root, Object value){
+<b class="nc">&nbsp;		if(root.value != null &amp;&amp; root.value.equals(value)) return true;</b>
+&nbsp;
+<b class="nc">&nbsp;		for(Node next: root.next.values()){</b>
+<b class="nc">&nbsp;			if(next != null &amp;&amp; containsValue(next, value)){</b>
+<b class="nc">&nbsp;				return true;</b>
+&nbsp;			}
+<b class="nc">&nbsp;		}</b>
+&nbsp;
+<b class="nc">&nbsp;		return false;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Set&lt;Entry&lt;Route, Invocation&gt;&gt; entrySet() {
+<b class="nc">&nbsp;		return entrySet(root);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Set&lt;Entry&lt;Route, Invocation&gt;&gt; entrySet(Node node){
+<b class="nc">&nbsp;		Set&lt;Entry&lt;Route, Invocation&gt;&gt; r = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;		Set&lt;Entry&lt;String, Node&gt;&gt; head = node.next.entrySet();</b>
+<b class="nc">&nbsp;		for(Entry&lt;String, Node&gt; entry: head) {</b>
+<b class="nc">&nbsp;			Node en = entry.getValue();</b>
+<b class="nc">&nbsp;			String ek = entry.getKey();</b>
+<b class="nc">&nbsp;			if (en.value != null) {</b>
+<b class="nc">&nbsp;				r.add(new RouteMapEntry(new Route(ek, &quot;&quot;), en.value));</b>
+&nbsp;			}
+<b class="nc">&nbsp;			Set&lt;Entry&lt;Route, Invocation&gt;&gt; sub =  entrySet(en);</b>
+<b class="nc">&nbsp;			for(Entry&lt;Route, Invocation&gt; e: sub){</b>
+<b class="nc">&nbsp;				Route route = e.getKey();</b>
+<b class="nc">&nbsp;				r.add(new RouteMapEntry(new Route(ek, route.Path.equals(&quot;&quot;)? route.Method : route.Method + &quot;/&quot; + route.Path), e.getValue()));</b>
+<b class="nc">&nbsp;			}</b>
+<b class="nc">&nbsp;		}</b>
+<b class="nc">&nbsp;		return r;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Invocation get(Object key) {
+&nbsp;
+<b class="fc">&nbsp;		String[] steps = key.toString().split(&quot;/&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;		Node cur = root;</b>
+<b class="fc">&nbsp;		for(int i = 0; i &lt; steps.length; i++){</b>
+<b class="fc">&nbsp;			Node next = cur.next.get(steps[i]);</b>
+<b class="fc">&nbsp;			if(next == null){</b>
+<b class="fc">&nbsp;				next = cur.next.get(&quot;__var__&quot;);</b>
+<b class="fc">&nbsp;				if(next == null) return null;</b>
+&nbsp;			}
+<b class="fc">&nbsp;			cur = next;</b>
+&nbsp;		}
+<b class="fc">&nbsp;		return cur.value;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean isEmpty() {
+<b class="nc">&nbsp;		return size == 0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Set&lt;Route&gt; keySet() {
+<b class="nc">&nbsp;		return keySet(root);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Set&lt;Route&gt; keySet(Node root){
+<b class="nc">&nbsp;		Set&lt;Entry&lt;String, Node&gt;&gt; s = root.next.entrySet();</b>
+<b class="nc">&nbsp;		Set&lt;Route&gt; r = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;		for(Entry&lt;String, Node&gt; entry : s){</b>
+<b class="nc">&nbsp;			Node n = entry.getValue();</b>
+<b class="nc">&nbsp;			if(n.value != null){</b>
+<b class="nc">&nbsp;				r.add(new Route(entry.getKey(), &quot;&quot;));</b>
+&nbsp;			}
+<b class="nc">&nbsp;			Set&lt;Route&gt; sub = keySet(n);</b>
+<b class="nc">&nbsp;			for(Route route: sub){</b>
+<b class="nc">&nbsp;				r.add(new Route(entry.getKey(), route.Path.equals(&quot;&quot;) ? route.Method: route.Method + &quot;/&quot; + route.Path));</b>
+<b class="nc">&nbsp;			}</b>
+<b class="nc">&nbsp;		}</b>
+<b class="nc">&nbsp;		return r;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Invocation put(Route arg0, Invocation arg1) {
+<b class="fc">&nbsp;		String[] steps = arg0.toString().split(&quot;/&quot;);</b>
+<b class="fc">&nbsp;		Node cur = root;</b>
+&nbsp;
+<b class="fc">&nbsp;		for(int i = 0; i &lt; steps.length; i++){</b>
+<b class="fc">&nbsp;			if(steps[i].length() &gt; 0 &amp;&amp; steps[i].charAt(0) == &#39;{&#39; &amp;&amp; steps[i].charAt(steps.length-1) == &#39;}&#39;){</b>
+<b class="fc">&nbsp;				steps[i] = &quot;__var__&quot;;</b>
+&nbsp;			}
+<b class="fc">&nbsp;			Node next = cur.next.get(steps[i]);</b>
+<b class="fc">&nbsp;			if(next == null){</b>
+<b class="fc">&nbsp;				next = new Node();</b>
+<b class="fc">&nbsp;				cur.next.put(steps[i], next);</b>
+&nbsp;			}
+<b class="fc">&nbsp;			cur = next;</b>
+&nbsp;		}
+<b class="fc">&nbsp;		cur.value = arg1;</b>
+<b class="fc">&nbsp;		return cur.value;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void putAll(Map&lt;? extends Route, ? extends Invocation&gt; m) {
+&nbsp;		// TODO Auto-generated Invocation stub
+<b class="nc">&nbsp;		throw new UnsupportedOperationException(&quot;Unimplemented Invocation &#39;putAll&#39;&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Invocation remove(Object key) {
+<b class="nc">&nbsp;		String[] steps = key.toString().split(&quot;/&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;		Node cur = root;</b>
+<b class="nc">&nbsp;		for(int i = 0; i &lt; steps.length; i++){</b>
+<b class="nc">&nbsp;			Node next = cur.next.get(steps[i]);</b>
+<b class="nc">&nbsp;			if(next == null){</b>
+<b class="nc">&nbsp;				next = cur.next.get(&quot;__var__&quot;);</b>
+<b class="nc">&nbsp;				if(next == null) return null;</b>
+&nbsp;			}
+<b class="nc">&nbsp;			cur = next;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		Invocation copy = cur.value;</b>
+<b class="nc">&nbsp;		cur.value = null;</b>
+<b class="nc">&nbsp;		return copy;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public int size() {
+<b class="nc">&nbsp;		return size;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Collection&lt;Invocation&gt; values() {
+<b class="nc">&nbsp;		Collection&lt;Invocation&gt; c = values(root);</b>
+<b class="nc">&nbsp;		if(root.value != null) c.add(root.value);</b>
+<b class="nc">&nbsp;		return c;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Collection&lt;Invocation&gt; values(Node root){
+<b class="nc">&nbsp;		Collection&lt;Invocation&gt; superCollection = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;		for(Node node: root.next.values()){</b>
+<b class="nc">&nbsp;			Collection&lt;Invocation&gt; c = values(node);</b>
+<b class="nc">&nbsp;			if(node.value != null) c.add(node.value);</b>
+<b class="nc">&nbsp;			superCollection.addAll(c);</b>
+<b class="nc">&nbsp;		}</b>
+<b class="nc">&nbsp;		return superCollection;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-04-27 18:34</div>
+</div>
+</body>
+</html>
