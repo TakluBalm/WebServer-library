@@ -12,13 +12,15 @@ public class HTTPSocket {
     private Socket socket;
     private BufferedReader reader;
     private PrintWriter writer;
+	InputStream inputStream;
+	OutputStream outputStream;
 
     public HTTPSocket(Socket serversocket, int timeOut){
         socket = serversocket;
         try {
 			serversocket.setSoTimeout(timeOut);
-            InputStream inputStream = serversocket.getInputStream();
-            OutputStream outputStream = serversocket.getOutputStream();
+            inputStream = serversocket.getInputStream();
+            outputStream = serversocket.getOutputStream();
             reader = new BufferedReader(new InputStreamReader(inputStream));
             writer = new PrintWriter(outputStream, true);
         } catch (Exception e) {
@@ -75,7 +77,7 @@ public class HTTPSocket {
 					if(header.length != 2){
 						throw new HttpInvalidException("Invalid HTTP request");
 					}
-					String headerName = header[0];
+					String headerName = header[0].toLowerCase();
 					String headerValue = header[1];
 					headers.put(headerName, headerValue);
 					if (headerName.equalsIgnoreCase("cookie")) {
@@ -109,7 +111,14 @@ public class HTTPSocket {
         socket.close();
     }
 
-    public void sendResponse(Response msg){
-        writer.println(msg);
+    public void sendResponse(Response msg) throws IOException {
+		writer.write(msg.headerString());
+
+		// Header End System
+		writer.write("\r\n");
+		writer.flush();
+
+		// Full body system
+		outputStream.write(msg.getBody());
     }
 }

@@ -5,10 +5,10 @@ import java.util.Set;
 
 public class Response {
 	private String version = "1.1";
-    private int statusCode = 200;
-    private HashMap<String, String> headers = new HashMap<>();
-	public HashMap<String, String> cookies = new HashMap<>();
-    public String body =  "";
+	private int statusCode = 200;
+	private HashMap<String, String> headers = new HashMap<>();
+	private HashMap<String, String> cookies = new HashMap<>();
+	private byte[] body;
 	int cookie_cnt = 0;
 
 	private static HashMap<Integer, String> statusMessages = new HashMap<>();
@@ -55,20 +55,24 @@ public class Response {
 		statusMessages.put(503, "Service Unavailable");
 		statusMessages.put(504, "Gateway Timeout");
 		statusMessages.put(505, "HTTP Version Not Supported");
-		
+
 	}
 
-    public Response(String version) {
+	public Response(String version) {
 		this.version = version;
-    }
+	}
 
-	public Response setHeader(String field, String value){
+	protected Response setHeader(String field, String value){
 		this.headers.put(field.toLowerCase(), value);
 		return this;
 	}
 
 	public String getHeaderValue(String header_field){
 		return headers.get(header_field.toLowerCase());
+	}
+	public String getCookie(String cookie_field)
+	{
+		return cookies.get(cookie_field);
 	}
 
 	public int getStatusCode(){
@@ -81,22 +85,21 @@ public class Response {
 	}
 
 	public Response setCookie(String cookieName, String cookieValue){
-		this.cookies.put(cookieName, cookieValue); 
+		this.cookies.put(cookieName, cookieValue);
 		cookie_cnt++;
 		return this;
 	}
 
-	public Response setBody(String body){
+	public Response setBody(byte[] body){
 		this.body = body;
 		return this;
 	}
 
-	@Override
-	public String toString() {
+	public String headerString() {
 		StringBuilder msgBuilder = new StringBuilder();
 
 		//	Content-length System
-		int contentLen = body.length();
+		int contentLen = body.length;
 		if(contentLen > 0){
 			String setLen = headers.get("content-length");
 			if(setLen == null || Integer.parseInt(setLen) != contentLen){
@@ -106,7 +109,7 @@ public class Response {
 
 		//	Response Status
 		msgBuilder.append("HTTP/").append(version).append(" ").append(statusCode).append(" ").append(statusMessages.get(statusCode)).append("\r\n");
-		
+
 		//	Header System
 		Set<String> fields = headers.keySet();
 		for(String field: fields){
@@ -127,14 +130,10 @@ public class Response {
 			}
 			msgBuilder.append("\r\n");
 		}
-
-		// Header End System
-		msgBuilder.append("\r\n");
-
-		//	Full body System
-		if(body != null)	msgBuilder.append(body);
-
 		return msgBuilder.toString();
 	}
-}
 
+	public byte[] getBody() {
+		return body;
+	}
+}

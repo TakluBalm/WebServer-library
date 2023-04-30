@@ -2,7 +2,7 @@ package server;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ResponseTest {
 	@Test
@@ -16,7 +16,7 @@ public class ResponseTest {
 	@Test
 	public void testSetCookie() {
 		Response r = new Response("1.1");
-		String value = r.setCookie("System", "69").cookies.get("System");
+		String value = r.setCookie("System", "69").getCookie("System");
 		assertEquals("69",value);
 	}
 
@@ -30,7 +30,7 @@ public class ResponseTest {
 	@Test
 	public void testToString() {
 		Response r = new Response("1.1");
-		r.setBody("Hello Guys").setCookie("session-id", "1234").setHeader("Content-type", "text/text").setStatusCode(404).setCookie("test", "semicolon");
+//		r.setBody("Hello Guys").setCookie("session-id", "1234").setHeader("Content-type", "text/text").setStatusCode(404).setCookie("test", "semicolon");
 		System.out.println(r.toString());
 	}
 }

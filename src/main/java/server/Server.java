@@ -45,29 +45,31 @@ public class Server {
         public void run() {
             try{
                 System.out.println("Black nigga instantiated.");
-
-                Request newRequest = clientSocket.waitRequest();
-                if(newRequest != null){
-                    String path = newRequest.getPath();
-                    String method = newRequest.getMethod();
-                    Invocation invocation = mapper.get(new Route(method, path));
-                    if(invocation == null){
-                        Response response = new Response("1.1").setStatusCode(404);
-                        clientSocket.sendResponse(response);
-                    }else{
-                        clientSocket.sendResponse((Response) invocation.invoke(newRequest));
+                while(true) {
+                    Request newRequest = clientSocket.waitRequest();
+                    if (newRequest != null) {
+                        System.out.println(newRequest);
+                        String path = newRequest.getPath();
+                        String method = newRequest.getMethod();
+                        Invocation invocation = mapper.get(new Route(method, path));
+                        if (invocation == null) {
+                            Response response = new Response("1.1").setStatusCode(404);
+                            clientSocket.sendResponse(response);
+                        } else {
+                            ImageResponse ir = (ImageResponse) invocation.invoke(newRequest);
+                            clientSocket.sendResponse(ir);
+                        }
+                    } else {
+                        clientSocket.sendResponse(new Response("1.1").setStatusCode(400));
                     }
-                }else{
-                    clientSocket.sendResponse(new Response("1.1").setStatusCode(400));
+                    String val = newRequest.getHeaders().get("connection");
+                    if(val == null || !val.equals("keep-alive")){
+                        System.out.println("Breaking connection");
+                        break;
+                    }
                 }
-
-                // close the client socket
-                clientSocket.closeConnection();
             } catch (Exception e){
-                System.out.println(
-                        "Yee failed black nigger because of "+
-                                e
-                );
+                System.out.println(e);
             }
         }
     }
