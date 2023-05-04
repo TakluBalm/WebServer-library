@@ -16,6 +16,7 @@ dependencies {
     testImplementation("junit:junit:4.13.1")
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation("io.github.classgraph:classgraph:4.8.106")
+    implementation("org.jsoup:jsoup:1.14.3")
 }
 
 tasks.test {
