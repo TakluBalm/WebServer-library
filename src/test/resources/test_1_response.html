@@ -4,15 +4,12 @@
     <title>Data URL Example</title>
 </head>
 <body>
-{% for x in bruh %}
-<div __attrs__ = "class = %x">
-	{{Hi guys, this is %name}}
-</div>
-{% end for %} <br>
+<center><img __attrs__="src=%URL"></center>
+<br>
 {% for x in bruh %}
 <div __attrs__ = "class = %x">
 	{% for y in lmao %}
-	<center><h1> {{This is title number %y, bole toh number %y}} </h1></center>
+	<center><h1> {{%x Loop Check %y}} </h1></center>
 	{% end for %}
 </div>
 {% end for %}

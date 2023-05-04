@@ -1,5 +1,6 @@
 package server;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,30 @@ public class Request {
 
 	public String getParameterValue(String parameter){
 		return params.get(parameter);
+	}
+
+	public Map<String, String> requestAsForm(){
+		String type = headers.get("content-type");
+		if(type != null && type.contains("application/x-www-form-urlencoded")){
+			try {
+				String sbody = new String(body, "US-ASCII");
+				String[] parameters = sbody.split("&");
+				HashMap<String, String> mp = new HashMap<>();
+				for(int i = 0; i < parameters.length; i++){
+					String[] p = parameters[i].split("=");
+					if(p.length != 2){
+						return null;
+					}
+					mp.put(p[0].strip(), p[1].strip());
+				}
+				return mp;
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}else{
+			return null;
+		}
 	}
 
 	@Override

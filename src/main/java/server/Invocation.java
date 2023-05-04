@@ -19,6 +19,7 @@ public class Invocation {
 		String[] hooks = path.split("/");
 		paramMask = new String[hooks.length];
 		for(int i = 0; i < hooks.length; i++){
+			if(hooks[i].length() == 0)	continue;
 			if(hooks[i].charAt(0) == '{' && hooks[i].charAt(hooks[i].length()-1) == '}'){
 				paramMask[i] = hooks[i].substring(1, hooks[i].length()-2);
 			}else{
