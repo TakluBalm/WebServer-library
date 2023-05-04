@@ -1,5 +1,6 @@
 package server;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,32 @@ public class Request {
 
 	public byte[] getBody() {
 		return body;
+	}
+
+	public String getCharset(){
+		if (this.getHeaders().get("content-type") == null){
+			return null;
+		}
+		String[] vals = this.getHeaders().get("content-type").strip().split(";");
+		if(vals.length > 2){
+			return null;
+		}
+
+		if(vals.length == 1){
+			return "ISO-8859-1";
+		}
+
+		if(vals[1].strip().split("=").length != 2){
+			return null;
+		}
+
+		if(vals[1].strip().split("=")[0].strip().equals("charset")){
+			return vals[1].strip().split("=")[1].strip();
+		}else{
+			return "ISO-8859-1";
+		}
+
+		
 	}
 
 	public String getParameterValue(String parameter){
