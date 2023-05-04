@@ -2,20 +2,17 @@ package server;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
-import org.jsoup.select.Elements;
-import org.w3c.dom.Attr;
 
-import javassist.compiler.SyntaxError;
 import server.exceptions.InvalidSyntaxException;
 
-import javax.swing.text.html.HTML;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
+import java.util.EmptyStackException;
+import java.util.Iterator;
 import java.util.List;
-import java.util.MissingResourceException;
+import java.util.Map;
+import java.util.Stack;
 
 public class HTMLResponse extends Response {
     String htmlPath;
@@ -64,114 +61,180 @@ public class HTMLResponse extends Response {
         return builder.toString();
     }
 
-    // private static void traverseLeafNodes(Element element, HashMap<String,
-    // Resource> mp) throws Exception {
-    // List<Node> childNodes = element.childNodes();
+	private void ParseWithContext(Element root, Map<String, Resource> context) throws Exception{
+		// System.out.println(root.tagName()+":"+root.childNodes());
+		for (Attribute attribute : root.attributes()) {
+			if (attribute.getKey().equals("__attrs__")) {
+				String value = attribute.getValue();
+				// src = /resource/%source; alt = %text
+				String[] attributesToChange = value.split(";");
+				for (String entry : attributesToChange) {
+					String[] attrVal = entry.split("=");
+					if (attrVal.length != 2) {
+						throw new InvalidSyntaxException("Invalid syntax on element " + root.tagName());
+					}
 
-    // for (Node childNode : childNodes) {
-    // if (childNode instanceof TextNode) {
-    // TextNode textNode = (TextNode) childNode;
-    // String text = textNode.text();
-    // for(String key : mp.keySet()){
-    // if(text.contains("{{" + key + "}}")){
-    // text = text.replace("{{" + key + "}}", mp.get(key).getData());
-    // }
-    // }
-    // textNode.text(text);
+					String val = attrVal[1].strip();
 
-    // } else if (childNode instanceof Element) {
-    // Element childElement = (Element) childNode;
-    // traverseLeafNodes(childElement, mp);
-    // }
-    // }
-    // }
+					StringBuilder builder = new StringBuilder();
+					for (int i = 0; i < val.length(); i++) {
+						if (val.charAt(i) == '%') {
+							int start = ++i;
+							if (i >= val.length()) {
+								throw new InvalidSyntaxException("Invalid syntax");
+							}
+							if (checkAlpha(val.charAt(i))) {
+								while (i < val.length() && isValid(val.charAt(i))) {
+									i++;
+								}
+								if (context.get(val.substring(start, i)) == null) {
+									throw new InvalidSyntaxException("Variable value not provided");
+								}
+								builder.append(context.get(val.substring(start, i)).getData());
+								i--;
+							} else if (val.charAt(i) == '%') {
+								builder.append('%');
+							}
+						} else {
+							builder.append(val.charAt(i));
+						}
+					}
 
-    public HTMLResponse embedData(HashMap<String, Resource> mp) throws Exception {
+					root.attr(attrVal[0].strip(), builder.toString());
+				}
+				root.removeAttr("__attrs__");
+
+			}
+		}
+
+		for (TextNode node : root.textNodes()) {
+			String nodeText = node.text().strip();
+			if (nodeText.startsWith("{{") && nodeText.endsWith("}}")) {
+				String actualText = nodeText.substring(2, nodeText.length() - 2);
+				StringBuilder builder = new StringBuilder();
+				for (int i = 0; i < actualText.length(); i++) {
+					if (actualText.charAt(i) == '%') {
+						int start = ++i;
+						if (i >= actualText.length()) {
+							throw new InvalidSyntaxException("Invalid syntax");
+						}
+						if (checkAlpha(actualText.charAt(i))) {
+							while (i < actualText.length() && isValid(actualText.charAt(i))) {
+								i++;
+							}
+							if (context.get(actualText.substring(start, i)) == null) {
+								throw new InvalidSyntaxException("Variable value not provided");
+							}
+							builder.append(context.get(actualText.substring(start, i)).getData());
+							i--;
+						} else if (actualText.charAt(i) == '%') {
+							builder.append('%');
+						}
+					} else {
+						builder.append(actualText.charAt(i));
+					}
+				}
+				node.text(builder.toString());
+			}
+		}
+	}
+
+
+	class Loop{
+		Iterator<?> itr;
+		String variable;
+		int startIdx;
+
+		public Loop(Iterable<?> loopIterable, String loopVar, int startIdx){
+			itr = loopIterable.iterator();
+			variable = loopVar;
+			this.startIdx = startIdx;
+		}
+
+		public Object getNext(){
+			return itr.next();
+		}
+
+		public String getVariable(){
+			return variable;
+		}
+
+		public boolean hasNext(){
+			return itr.hasNext();
+		}
+
+	}
+
+
+	private Element embedDataHelper(Element root, Map<String, Resource> context) throws Exception{
+		List<Node> nodes = root.childNodes();
+		Stack<Loop> loops = new Stack<>();
+		int skip = 0;
+
+		Element element = new Element(root.tag(), root.baseUri(), root.attributes().clone());
+
+		for(int i = 0; i < nodes.size(); i++){
+			Node node = nodes.get(i);
+			if(node instanceof Element && skip == 0){
+				element.appendChild(embedDataHelper((Element)node, context));
+			}else if(node instanceof TextNode){
+				String text = ((TextNode)node).text().strip();
+				if(text.startsWith("{%") && text.endsWith("%}")){
+					String actualText = text.substring(2, text.length()-2).strip();
+					String[] tokens = actualText.split(" ");
+					
+					if(tokens.length == 4 && tokens[0].equals("for") && tokens[2].equals("in")){
+						Resource resource = context.get(tokens[3]);
+						if(resource != null){
+							Loop loop = new Loop((Iterable<?>)resource.getData(), tokens[1], i);
+							loops.push(loop);
+							if(loop.hasNext()){
+								Object val = loop.getNext();
+								Resource r = new Resource("text");
+								r.loadData(val);
+								context.put(loop.getVariable(), r);
+							}else{
+								skip++;
+							}
+						}else{
+							throw new InvalidSyntaxException("Resouce not provided");
+						}
+					}else if(tokens.length == 2 && tokens[0].equals("end") && tokens[1].equals("for")){
+						try{
+							Loop loop = loops.pop();
+							if(loop.hasNext()){
+								loops.push(loop);
+								Resource r = new Resource("text");
+								r.loadData(loop.getNext());
+								context.put(loop.getVariable(), r);
+								i = loop.startIdx;
+							}else{
+								context.remove(loop.getVariable());
+								if(skip > 0)	skip--;
+							}
+						}catch(EmptyStackException e){
+							throw new InvalidSyntaxException("The Syntax of the HTML file is invalid");
+						}
+					}
+				}else{
+					TextNode copy = new TextNode(((TextNode) node).text());
+					element.appendChild(copy);
+				}
+			}
+		}
+
+		ParseWithContext(element, context);
+		// System.out.println(element.html());
+		return element;
+	}
+
+    public HTMLResponse embedData(Map<String, Resource> mp) throws Exception {
 
         Document parsedHTML = Jsoup.parse(this.toString());
-        Elements elements = parsedHTML.getAllElements();
+		Element parsedRoot = embedDataHelper(parsedHTML.root(), mp);
 
-        for (Element element : elements) {
-            for (Attribute attribute : element.attributes()) {
-                if (attribute.getKey().equals("__attrs__")) {
-                    String value = attribute.getValue();
-                    // src = %source; alt = %text
-                    String[] attributesToChange = value.split(";");
-                    for (String entry : attributesToChange) {
-                        String[] attrVal = entry.split("=");
-                        if (attrVal.length != 2) {
-                            throw new InvalidSyntaxException("Invalid syntax on element " + element.tagName());
-                        }
-
-                        String val = attrVal[1].strip();
-
-                        StringBuilder builder = new StringBuilder();
-                        for (int i = 0; i < val.length(); i++) {
-                            if (val.charAt(i) == '%') {
-                                int start = ++i;
-                                if (i >= val.length()) {
-                                    throw new InvalidSyntaxException("Invalid syntax");
-                                }
-                                if (checkAlpha(val.charAt(i))) {
-                                    while (i < val.length() && isValid(val.charAt(i))) {
-                                        i++;
-                                    }
-                                    if (mp.get(val.substring(start, i)) == null) {
-                                        throw new InvalidSyntaxException("Variable value not provided");
-                                    }
-                                    builder.append(mp.get(val.substring(start, i)).getData());
-                                    i--;
-                                } else if (val.charAt(i) == '%') {
-                                    builder.append('%');
-                                }
-                            } else {
-                                builder.append(val.charAt(i));
-                            }
-                        }
-
-                        element.attr(attrVal[0].strip(), builder.toString());
-                        element.removeAttr("__attrs__");
-                    }
-
-                }
-            }
-
-            List<TextNode> nodes = element.textNodes();
-            for (TextNode node : nodes) {
-                String nodeText = node.text().strip();
-                if (nodeText.startsWith("{{") && nodeText.endsWith("}}")) {
-                    String actualText = nodeText.substring(2, nodeText.length() - 2);
-                    StringBuilder builder = new StringBuilder();
-                    for (int i = 0; i < actualText.length(); i++) {
-                        if (actualText.charAt(i) == '%') {
-                            int start = ++i;
-                            if (i >= actualText.length()) {
-                                throw new InvalidSyntaxException("Invalid syntax");
-                            }
-                            if (checkAlpha(actualText.charAt(i))) {
-                                while (i < actualText.length() && isValid(actualText.charAt(i))) {
-                                    i++;
-                                }
-                                if (mp.get(actualText.substring(start, i)) == null) {
-                                    throw new InvalidSyntaxException("Variable value not provided");
-                                }
-                                builder.append(mp.get(actualText.substring(start, i)).getData());
-                                i--;
-                            } else if (actualText.charAt(i) == '%') {
-                                builder.append('%');
-                            }
-                        } else {
-                            builder.append(actualText.charAt(i));
-                        }
-                    }
-                    node.text(builder.toString());
-                }
-            }
-        }
-        // traverseLeafNodes(parsedHTML.selectFirst("html"), mp);
-
-        System.out.println(parsedHTML.html());
-        setBodyFromString(parsedHTML.html());
+        System.out.println(parsedRoot.html());
+        setBodyFromString(parsedRoot.html());
         return this;
     }
 
@@ -183,45 +246,4 @@ public class HTMLResponse extends Response {
 
         return checkAlpha(c) || c == '_' || (c <= '9' && c >= '0');
     }
-
-    // public String fillTags(String line,HashMap<String,Resource> mp) throws
-    // Exception {
-    // for(String x : mp.keySet()){
-    // StringBuilder s = new StringBuilder();
-    // s.append("{{");
-    // s.append(x);
-    // s.append("}}");
-    // String target = s.toString();
-    //
-    //
-    // int i = line.indexOf(target);
-    // if(i!=-1){
-    // String type = mp.get(x).getType();
-    // switch(type){
-    // case "image":
-    // try{
-    // String checkImg=line.substring(i-9,i-2);
-    // if(checkImg.equals("img src"))
-    // {
-    // line = line.replace(target, mp.get(x).getData());
-    // }
-    // else
-    // {
-    //
-    // }
-    //
-    // }
-    // catch (Exception e)
-    // {
-    // System.out.println("");
-    // }
-    // }
-    // }
-    //
-    //// line = line.replace(target, mp.get(x).getData());
-    // }
-    //
-    // return line;
-    //
-    // }
 }

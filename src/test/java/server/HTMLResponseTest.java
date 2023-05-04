@@ -1,15 +1,14 @@
 package server;
 
-import org.jsoup.select.Elements;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import server.exceptions.InvalidResourceTypeException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,8 +43,17 @@ class HTMLResponseTest {
     public void testAttributeEmbedding() throws Exception {
         HTMLResponse r = new HTMLResponse("1.1", "src/test/resources/test_1_response.html");
         HashMap<String, Resource> mp = new HashMap<>();
-        mp.put("url", new Resource("text", "https://www.google.com"));
-        mp.put("tanuj", new Resource("image", "src/test/resources/test-img.jpeg"));
+		List<String> bruh = new ArrayList<>();
+		bruh.add("Jugal");
+		bruh.add("Prakhar");
+		bruh.add("Tanuj");
+		List<String> lmao = new ArrayList<>();
+		lmao.add("Gautam");
+		lmao.add("Vinay");
+		lmao.add("Pajji");
+		mp.put("bruh", new Resource("iterable").loadData(bruh));
+		mp.put("name", new Resource("text").loadData("JPT"));
+		mp.put("lmao", new Resource("iterable").loadData(lmao));
         r.embedData(mp);
     }
 
@@ -53,7 +61,7 @@ class HTMLResponseTest {
     public void testImageEmbedding() throws Exception{
         HTMLResponse r = new HTMLResponse("1.1","src/test/resources/testImgEmb.html");
         HashMap<String,Resource> mp=new HashMap<>();
-        mp.put("This is img",new Resource("image","src/test/resources/test-img.jpeg"));
+        mp.put("This is img",new Resource("image").loadData("src/test/resources/test-img.jpeg"));
         r.embedData(mp);
     }
 

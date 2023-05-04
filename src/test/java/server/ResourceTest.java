@@ -7,36 +7,27 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+
 class ResourceTest {
 
     @Test
     public void getDataTest() throws Exception {
-        Resource r = new Resource("text", "hi bruih");
+        Resource r = new Resource("text").loadData("hi bruih");
         assertEquals(r.getData(), "hi bruih");
-        r = new Resource("image", "src/test/resources/test-img.jpeg");
+        r = new Resource("image").loadData("src/test/resources/test-img.jpeg");
         System.out.println(r.getData());
 //        assertEquals();
 
     }
 
     @Test
-    public void testResourceTypeException() {
+    public void testResourceTypeException() throws IOException {
         try {
-            Resource r= new Resource("yeahh","src/test/resources/test-img.jpeg");
+            Resource r = new Resource("yeahh").loadData("src/test/resources/test-img.jpeg");
             fail(); //remember this line, else 'may' false positive
         } catch (InvalidResourceTypeException e) {
             assertThat(e.getMessage(), is("Invalid Resource Type Exception"));
-            //assert others
-        }
-    }
-
-    @Test
-    public void testInvalidConditionalException() {
-        try {
-            Resource r= new Resource("conditional","src/test/resources/test-img.jpeg");
-            fail(); //remember this line, else 'may' false positive
-        } catch (InvalidResourceTypeException e) {
-            assertThat(e.getMessage(), is("Conditional placeholders can only have true or false values"));
             //assert others
         }
     }

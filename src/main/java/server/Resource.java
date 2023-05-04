@@ -3,35 +3,19 @@ package server;
 import server.exceptions.InvalidResourceTypeException;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
 
 public class Resource {
-    static String[] types = {"text", "image", "conditional"};
-    String type;
-    String path;
+    static String[] types = {"text", "image", "iterable"};
+    private String type;
+	private Object data;
 
-    public Resource(String dataType, String pathToData) throws InvalidResourceTypeException {
+    public Resource(String dataType) throws InvalidResourceTypeException {
 
-        if(Arrays.asList(types).contains(dataType))
-        {
-            this.type= dataType.toLowerCase();
-            if(type.equals("conditional")){
-                if ((pathToData.toLowerCase()=="true")){
-                    this.path=pathToData.toLowerCase();
-                }
-                else if(pathToData.toLowerCase()=="false")
-                {
-                    this.path=pathToData.toLowerCase();
-                }
-                else
-                {
-                    throw new InvalidResourceTypeException("Conditional placeholders can only have true or false values");
-                }
-            }else {
-                this.path= pathToData;
-            }
+        if(Arrays.asList(types).contains(dataType)){
+			type = dataType;
         }
         else {
             throw new InvalidResourceTypeException("Invalid Resource Type Exception");
@@ -39,15 +23,13 @@ public class Resource {
 
     }
 
-    public String getType(){
-        return type;
-    }
-
-    public String getData() throws Exception {
+	Resource loadData(Object arg0) throws IOException, InvalidResourceTypeException{
         switch (type){
             case "text":
-                return path;
+                data = arg0.toString();
+				return this;
             case "image":
+				String path = arg0.toString();
                 FileInputStream fis = new FileInputStream(path);
                 byte[] image_data = fis.readAllBytes();
                 Base64.Encoder encoder = Base64.getEncoder();
@@ -60,15 +42,24 @@ public class Resource {
                 builder.append("data:image/"+extension+";base64,");
                 builder.append(encoded_image);
 
-                return builder.toString();
-
-            case "conditional" :
-                return path;
-            case "loop":
-
-
+                data = builder.toString();
+				return this;
+            case "iterable" :
+				if(!(arg0 instanceof Iterable)){
+					throw new InvalidResourceTypeException("Data does not match resourceType");
+				}
+                data =  arg0;
+				return this;
             default:
-                return "sexy boi";
+				return this;
         }
+	}
+
+    public String getType(){
+        return type;
+    }
+
+    public Object getData() throws Exception {
+		return data;
     }
 }
