@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import server.exceptions.InvalidResourceTypeException;
 
-import javax.swing.text.html.HTML;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,11 +41,11 @@ class HTMLResponseTest {
     }
 
     @Test
-    public void testTextEmbedding() throws Exception {
+    public void testAttributeEmbedding() throws Exception {
         HTMLResponse r = new HTMLResponse("1.1", "src/test/resources/test_1_response.html");
         HashMap<String, Resource> mp = new HashMap<>();
         mp.put("url", new Resource("text", "https://www.google.com"));
-        mp.put("txt", new Resource("text", "Tanuj is not gay?"));
+        mp.put("tanuj", new Resource("image", "src/test/resources/test-img.jpeg"));
         r.embedData(mp);
     }
 

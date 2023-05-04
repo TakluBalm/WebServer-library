@@ -47,7 +47,7 @@ class ImageResponseTest {
     }
 
 //    @Test
-    public void     checkFromBrowser() throws IOException {
+    public void checkFromBrowser() throws IOException {
         Server server = new Server();
         server.start();
         while (true){}
