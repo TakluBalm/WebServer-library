@@ -19,7 +19,7 @@ public class Server {
 	ExecutorService pool;
 	Properties properties;
 
-    class WhiteColonial implements Runnable{
+    class Master implements Runnable{
         @Override
         public void run() {
             try {
@@ -27,7 +27,7 @@ public class Server {
                     try {
                         Socket clientSocket = socket.accept();
                         HTTPSocket clientHttpSocket = new HTTPSocket(clientSocket, properties.inactivityTimeout);
-                        BlackSlave servant = new BlackSlave(clientHttpSocket);
+                        Worker servant = new Worker(clientHttpSocket);
                         pool.submit(servant);
                     }catch (SocketTimeoutException e){}
                 }
@@ -37,10 +37,10 @@ public class Server {
         }
     }
 
-    class BlackSlave implements Runnable{
+    class Worker implements Runnable{
         HTTPSocket clientSocket;
  
-		public BlackSlave(HTTPSocket clientsocket){
+		public Worker(HTTPSocket clientsocket){
             this.clientSocket = clientsocket;
         }
 
@@ -53,6 +53,10 @@ public class Server {
 						throw new IOException();
 					}
 					Invocation invocation = mapper.get(r.route);
+					if(invocation == null){
+						clientSocket.sendResponse(new Response("1.1").setStatusCode(404));
+						continue;
+					}
 					try{
 						Response response = (Response)invocation.invoke(r);
 						clientSocket.sendResponse(response);
@@ -100,6 +104,16 @@ public class Server {
                                 Controller controller = annotatedClass.getAnnotation(server.Controller.class);
                                 MethodHandler handler = callableMethod.getAnnotation(server.MethodHandler.class);
 
+								if(!Response.class.isAssignableFrom(callableMethod.getReturnType())){
+									System.out.println(annotatedClass.getName()+": "+ callableMethod.getName() +" does not return proper type");
+									continue;
+								}
+								Class<?>[] ptypes = callableMethod.getParameterTypes();
+								if(ptypes.length != 1 || !ptypes[0].isAssignableFrom(Request.class)){
+									System.out.println(annotatedClass.getName()+": "+ callableMethod.getName() +" does not accept proper parameters");
+									continue;
+								}
+
                                 Route route = new Route(handler.method(), controller.URL());
                                 Invocation invocation = new Invocation(object, callableMethod, route.Path);
 
@@ -121,7 +135,7 @@ public class Server {
         socket = new ServerSocket(8080);
         running = true;
         socket.setSoTimeout(500);
-        master = new Thread(new WhiteColonial());
+        master = new Thread(new Master());
         master.start();
     }
 

@@ -37,7 +37,7 @@ class ServerTest {
 
     @Test
     void setupTest() throws IOException {
-        String msg = "Hello from test!";
+        String msg = "Hello from test class!";
         writer.println(msg);
         String response = reader.readLine();
         assertTrue(response.equals("HTTP/1.1 400 Bad Request"));
@@ -57,7 +57,7 @@ class ServerTest {
         writer.print(msg);
 		writer.flush();
         String response = reader.readLine();
-        assertTrue(response.equals("HTTP/1.1 400 Bad Request"));
+        assertTrue(response.equals("HTTP/1.1 408 Request Timeout"));
 	}
 
 	@Test
@@ -74,6 +74,7 @@ class ServerTest {
         writer.print(msg);
 		writer.flush();
         String response = reader.readLine();
+		System.out.println("response = " + response);
         assertTrue(response.equals("HTTP/1.1 404 Not Found"));
 	}
 

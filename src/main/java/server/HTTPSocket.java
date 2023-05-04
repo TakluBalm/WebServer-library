@@ -11,7 +11,6 @@ import server.exceptions.HttpRequestTimeoutException;
 
 public class HTTPSocket {
     private Socket socket;
-    private BufferedReader reader;
     private PrintWriter writer;
 	InputStream inputStream;
 	OutputStream outputStream;
@@ -21,13 +20,27 @@ public class HTTPSocket {
 		socket.setSoTimeout(timeout);
 		inputStream = serversocket.getInputStream();
 		outputStream = serversocket.getOutputStream();
-		reader = new BufferedReader(new InputStreamReader(inputStream));
 		writer = new PrintWriter(outputStream, true);
     }
 
+	private String readLine() throws IOException{
+        StringBuilder sb = new StringBuilder();
+        int c = inputStream.read();
+        while (c != -1 && c != '\n') {
+            if (c != '\r') {
+                sb.append((char) c);
+            }
+            c = inputStream.read();
+        }
+        if (c == -1 && sb.length() == 0) {
+            return null;
+        }
+        return sb.toString();
+	}
+
 	private String timedRead() throws HttpRequestTimeoutException, IOException{
 		try{
-			return reader.readLine();
+			return readLine();
 		}catch(SocketTimeoutException e){
 			throw new HttpRequestTimeoutException("Timed Out while waiting for Request");
 		}
@@ -37,7 +50,7 @@ public class HTTPSocket {
 		sendResponse(new Response("1.1").setStatusCode(code));
 	}
 
-	public Request tryRequest() {
+	public Request tryRequest() throws IOException {
 		try {
 			while(true){
 				// Parse request line
@@ -120,9 +133,13 @@ public class HTTPSocket {
 
 				return new Request(route, headers, cookies, params, body);
 			}
-		} catch (Exception e){
+		} catch (HttpRequestTimeoutException e){
 			e.printStackTrace();
+			sendStatusCode(408);
 			return null;
+		} catch (IOException e){
+			e.printStackTrace();
+			throw e;
 		}
     }
 
