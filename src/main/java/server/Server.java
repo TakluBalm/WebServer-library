@@ -3,9 +3,11 @@ import io.github.classgraph.*;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.util.Map;
+import java.util.concurrent.*;
 
 public class Server {
 
@@ -14,6 +16,8 @@ public class Server {
     boolean running;
     ClassInfoList controllerClasses;
     Map<Route, Invocation> mapper = new RouteMap();
+	ExecutorService pool;
+	Properties properties;
 
     class WhiteColonial implements Runnable{
         @Override
@@ -22,12 +26,9 @@ public class Server {
                 while (running) {
                     try {
                         Socket clientSocket = socket.accept();
-                        HTTPSocket clientHttpSocket = new HTTPSocket(clientSocket, 2000);
+                        HTTPSocket clientHttpSocket = new HTTPSocket(clientSocket, properties.inactivityTimeout);
                         BlackSlave servant = new BlackSlave(clientHttpSocket);
-                        Thread slave = new Thread(servant);
-                        slave.start();
-                        slave.join();
-
+                        pool.submit(servant);
                     }catch (SocketTimeoutException e){}
                 }
             }catch (Exception e) {
@@ -38,42 +39,47 @@ public class Server {
 
     class BlackSlave implements Runnable{
         HTTPSocket clientSocket;
-        public BlackSlave(HTTPSocket clientsocket){
+ 
+		public BlackSlave(HTTPSocket clientsocket){
             this.clientSocket = clientsocket;
         }
+
         @Override
         public void run() {
-            try{
-                System.out.println("Black nigga instantiated.");
+			try{
                 while(true) {
-                    Request newRequest = clientSocket.waitRequest();
-                    if (newRequest != null) {
-                        System.out.println(newRequest);
-                        String path = newRequest.getPath();
-                        String method = newRequest.getMethod();
-                        Invocation invocation = mapper.get(new Route(method, path));
-                        if (invocation == null) {
-                            Response response = new Response("1.1").setStatusCode(404);
-                            clientSocket.sendResponse(response);
-                        } else {
-							Response r = (Response)invocation.invoke(newRequest);
-							System.out.println(r.headerString());
-                            clientSocket.sendResponse(r);
-                        }
-                    } else {
-                        clientSocket.sendResponse(new Response("1.1").setStatusCode(400));
-                    }
-                    String val = newRequest.getHeaders().get("connection");
-                    if(val == null || !val.equals("keep-alive")){
-                        System.out.println("Breaking connection");
-                        break;
-                    }
+					Request r = clientSocket.tryRequest();
+					if(r == null){
+						throw new IOException();
+					}
+					Invocation invocation = mapper.get(r.route);
+					try{
+						Response response = (Response)invocation.invoke(r);
+						clientSocket.sendResponse(response);
+					}catch(InvocationTargetException e){
+						clientSocket.sendResponse(new Response("1.1").setStatusCode(500));
+					}
                 }
-            } catch (Exception e){
-                e.printStackTrace();
-            }
+			}catch(IOException e){
+				try{
+					clientSocket.closeConnection();
+				}catch(Exception ee){}
+				return;
+			}
         }
     }
+
+	public Server(Properties properties){
+		this.properties = properties;
+	}
+
+	public Server(){
+		this.properties = new Properties();
+	}
+
+	public void updateProperties(Properties properties){
+		throw new UnsupportedOperationException("Reloading with new propeties is not yet supported\n");
+	}
 
     public void start() throws IOException {
         try {
@@ -95,7 +101,7 @@ public class Server {
                                 MethodHandler handler = callableMethod.getAnnotation(server.MethodHandler.class);
 
                                 Route route = new Route(handler.method(), controller.URL());
-                                Invocation invocation = new Invocation(object, callableMethod, route.getParameterMask());
+                                Invocation invocation = new Invocation(object, callableMethod, route.Path);
 
                                 mapper.put(route, invocation);
                             }
@@ -107,7 +113,7 @@ public class Server {
                     }
                 }
             });
-
+			pool = Executors.newFixedThreadPool(properties.poolSize);
         } catch (Exception e) {
             System.out.println(e);
             System.exit(-1);

@@ -2,10 +2,11 @@ package server;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.*;
+import java.util.zip.*;
 
-import server.exceptions.HttpInvalidException;
 import server.exceptions.HttpRequestTimeoutException;
 
 public class HTTPSocket {
@@ -15,99 +16,152 @@ public class HTTPSocket {
 	InputStream inputStream;
 	OutputStream outputStream;
 
-    public HTTPSocket(Socket serversocket, int timeOut){
+    public HTTPSocket(Socket serversocket, int timeout) throws SocketException, IOException{
         socket = serversocket;
-        try {
-			serversocket.setSoTimeout(timeOut);
-            inputStream = serversocket.getInputStream();
-            outputStream = serversocket.getOutputStream();
-            reader = new BufferedReader(new InputStreamReader(inputStream));
-            writer = new PrintWriter(outputStream, true);
-        } catch (Exception e) {
-            System.out.println(e);
-            System.exit(-1);
-        }
+		socket.setSoTimeout(timeout);
+		inputStream = serversocket.getInputStream();
+		outputStream = serversocket.getOutputStream();
+		reader = new BufferedReader(new InputStreamReader(inputStream));
+		writer = new PrintWriter(outputStream, true);
     }
 
-	public Request waitRequest() {
-		// Parse request line
+	private String timedRead() throws HttpRequestTimeoutException, IOException{
+		try{
+			return reader.readLine();
+		}catch(SocketTimeoutException e){
+			throw new HttpRequestTimeoutException("Timed Out while waiting for Request");
+		}
+	}
+
+	void sendStatusCode(int code) throws IOException{
+		sendResponse(new Response("1.1").setStatusCode(code));
+	}
+
+	public Request tryRequest() {
 		try {
-			String[] requestLine;
 			while(true){
-				try{
-					requestLine = (reader.readLine()).split(" ");
-					break;
-				}catch (SocketTimeoutException se){
+				// Parse request line
+				String[] requestLine = timedRead().split(" ");
+				if(requestLine.length != 3){
+					sendStatusCode(400);
 					continue;
 				}
-			}
 
-			if(requestLine.length != 3){
-				throw new HttpInvalidException("Invalid HTTP request");
-			}
-
-			String method = requestLine[0];
-			String[] uri = requestLine[1].split("\\?");
-			if(uri.length > 2){
-				throw new HttpInvalidException("Invalid HTTP request");
-			}
-
-			Route route = new Route(method, uri[0]);
-			String version = requestLine[2];
-
-			Map<String, String> params = new HashMap<>();
-			if(uri.length == 2){
-				String[] parameters = uri[1].split("&");
-				for(int i = 0; i < parameters.length; i++){
-					String[] p = parameters[i].split("=");
-					if(p.length != 2) throw new HttpInvalidException("Invalid Exception");
-					params.put(p[0], p[1]);
+				String method = requestLine[0];
+				String[] uri = requestLine[1].split("\\?");
+				if(uri.length > 2){
+					sendStatusCode(400);
+					continue;
 				}
-			}
+
+				Route route = new Route(method, uri[0]);
+				if(!requestLine[2].equalsIgnoreCase("HTTP/1.1")){
+					sendStatusCode(505);
+					continue;
+				}
+
+				Map<String, String> params = new HashMap<>();
+				boolean reset = false;
+				if(uri.length == 2){
+					String[] parameters = uri[1].split("&");
+					for(int i = 0; i < parameters.length; i++){
+						String[] p = parameters[i].split("=");
+						if(p.length != 2){
+							sendStatusCode(400);
+							reset = true;
+							break;
+						}
+						params.put(p[0], p[1]);
+					}
+				}
+				if(reset)	continue;
+				reset = false;
 
 
-			// Parse headers
-			Map<String, String> headers = new HashMap<>();
-			List<String> cookies = new ArrayList<>();
+				// Parse headers
+				Map<String, String> headers = new HashMap<>();
+				List<String> cookies = new ArrayList<>();
 
-			String line;
-			try{
-				while ((line = reader.readLine()).length() > 0) {
+				String line;
+				while ((line = timedRead()).length() > 0) {
 					String[] header = line.split(": ");
 					if(header.length != 2){
-						throw new HttpInvalidException("Invalid HTTP request");
+						sendStatusCode(400);
+						reset = true;
+						break;
 					}
 					String headerName = header[0].toLowerCase();
 					String headerValue = header[1];
+
 					headers.put(headerName, headerValue);
+
 					if (headerName.equalsIgnoreCase("cookie")) {
 						cookies.addAll(Arrays.asList(headerValue.split("; ")));
 					}
 				}
-			}catch(SocketTimeoutException e){
-				throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
-			}
+				if(reset)	continue;
+				reset = false;
 
-			// Parse body
-			String body = "";
-			String contentLen = headers.get("Content-Length");
-			int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;
-			char[] charBuf = new char[bodyLen];
-			try{
-				reader.read(charBuf);
-				body = new String(charBuf);
-			}catch(SocketTimeoutException e){
-				throw new HttpRequestTimeoutException("Connection Timed Out while waiting for Request");
-			}
+				// Parse body
+				String contentLen = headers.get("content-length");
+				String contentEncoding = headers.get("content-encoding");
+				int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;
+				byte[] body = new byte[bodyLen];
+				try{
+					inputStream.read(body);
+					body = decode(body, contentEncoding);
+					if(body == null){
+						sendStatusCode(400);
+						continue;
+					}
+				}catch(SocketTimeoutException e){
+					throw new HttpRequestTimeoutException("Request Timed Out");
+				}
 
-			return new Request(route, version, headers, cookies, params, body);
+				return new Request(route, headers, cookies, params, body);
+			}
 		} catch (Exception e){
-			System.out.println(e);
+			e.printStackTrace();
 			return null;
 		}
     }
 
-    public void closeConnection() throws IOException {
+	private byte[] decode(byte[] body, String contentEncoding) {
+		if(contentEncoding == null)	return body;
+
+		ByteArrayInputStream bodyStream = new ByteArrayInputStream(body);
+		switch(contentEncoding.toLowerCase()){
+			case "gzip":{
+				try (GZIPInputStream gzipStream = new GZIPInputStream(bodyStream)) {
+					return gzipStream.readAllBytes();
+				} catch (IOException e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+			case "deflate":{
+				try(InflaterInputStream inflaterStream = new InflaterInputStream(bodyStream)){
+					return inflaterStream.readAllBytes();
+				}catch(IOException e){
+					e.printStackTrace();
+					return null;
+				}
+			}
+			case "compress":{
+				try(InflaterInputStream inflaterStream = new InflaterInputStream(bodyStream, new Inflater(true))){
+					return inflaterStream.readAllBytes();
+				}catch(IOException e){
+					e.printStackTrace();
+					return null;
+				}
+			}
+			default:{
+				return body;
+			}
+		}
+	}
+
+	public void closeConnection() throws IOException {
         socket.close();
     }
 

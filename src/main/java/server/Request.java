@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 public class Request {
-	protected Route route = new Route("GET", "/");
+	protected Route route;
 	protected String version = "HTTP/1.1";
 	protected Map<String, String> headers = new HashMap<>();
 	protected Map<String, String> params = new HashMap<>();
 	protected List<String> cookies = new ArrayList<>();
-	protected String body = "";
+	protected byte[] body;
 
 	public String getMethod() {
 		return route.Method;
@@ -33,7 +33,7 @@ public class Request {
 		return cookies;
 	}
 
-	public String getBody() {
+	public byte[] getBody() {
 		return body;
 	}
 
@@ -53,9 +53,14 @@ public class Request {
 		return builder.toString();
 	}
 
-	public Request(Route route, String version, Map<String, String> headers, List<String> cookies, Map<String, String> params, String body){
+	public Request(
+			Route route,
+			Map<String, String> headers,
+			List<String> cookies,
+			Map<String, String> params,
+			byte[] body
+		){
 		this.route = route;
-		this.version = version;
 		this.body = body;
 		this.cookies = cookies;
 		this.headers = headers;

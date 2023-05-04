@@ -1,42 +1,46 @@
 package server;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 public class Invocation {
 
     private Object object;
     private Method method;
-	private boolean[] paramMask;
+	private String[] paramMask;
 
-	public boolean[] getParameterMask(){
+	public String[] getParameterMask(){
 		return paramMask;
 	}
 
-    public Invocation(Object object, Method method, boolean[] paramMask){
+    public Invocation(Object object, Method method, String path){
         this.object = object;
         this.method = method;
-        this.paramMask = paramMask;
-    }
-
-    public Object invoke(Request request){
-
-		String[] hooks = request.getPath().split("/");
-		ArrayList<Object> args = new ArrayList<>();
-		args.add(request);
-		for(int i = 0; i < paramMask.length; i++){
-			if(paramMask[i]){
-				args.add(hooks[i]);
+		String[] hooks = path.split("/");
+		paramMask = new String[hooks.length];
+		for(int i = 0; i < hooks.length; i++){
+			if(hooks[i].charAt(0) == '{' && hooks[i].charAt(hooks[i].length()-1) == '}'){
+				paramMask[i] = hooks[i].substring(1, hooks[i].length()-2);
+			}else{
+				paramMask[i] = null;
 			}
 		}
+    }
 
-        try {
-            return method.invoke(object, args.toArray());
-        } catch (Exception e) {
-            System.out.println(e);
-        }
+    public Object invoke(Request request) throws InvocationTargetException{
 
-        return null;
+		String[] hooks = request.getPath().split("/");
+		for(int i = 0; i < paramMask.length; i++){
+			if(paramMask[i] != null){
+				request.params.put(paramMask[i], hooks[i]);
+			}
+		}
+		try{
+			return method.invoke(object, request);
+		} catch(IllegalAccessException e){
+			e.printStackTrace();
+			return null;
+		}
     }
 
 }

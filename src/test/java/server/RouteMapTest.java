@@ -9,7 +9,7 @@ class RouteMapTest {
     void putEntryAndRetrieve() throws NoSuchMethodException {
         RouteMap r = new RouteMap();
         Route route = new Route("GET", "/tanuj");
-        Invocation invocation = new Invocation(new Object(), this.getClass().getDeclaredMethod("putEntryAndRetrieve"), new boolean[1]);
+        Invocation invocation = new Invocation(new Object(), this.getClass().getDeclaredMethod("putEntryAndRetrieve"), "");
         r.put(route, invocation);
         System.out.println(r.keySet());
         assertEquals(r.get(route), invocation);
@@ -19,7 +19,7 @@ class RouteMapTest {
     void putVariableEntryAndCheck() throws NoSuchMethodException{
         RouteMap r = new RouteMap();
         Route route = new Route("GET", "/tanuj/{id}");
-        Invocation invocation = new Invocation(new Object(), this.getClass().getDeclaredMethod("putVariableEntryAndCheck"), new boolean[2]);
+        Invocation invocation = new Invocation(new Object(), this.getClass().getDeclaredMethod("putVariableEntryAndCheck"), "");
         r.put(route, invocation);
         System.out.println(r.keySet());
         Route test1 = new Route("GET", "/tanuj/123");
