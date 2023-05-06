@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html id="htmlId">
 <head>
-  <title>Coverage Report > HTTPSocket</title>
+  <title>Coverage Report > DB_postgres</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -18,10 +18,10 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">server</a>
+    <a href="../index.html">ORM.Database</a>
 </div>
 
-<h1>Coverage Summary for Class: HTTPSocket (server)</h1>
+<h1>Coverage Summary for Class: DB_postgres (ORM.Database)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -40,7 +40,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">HTTPSocket</td>
+  <td class="name">DB_postgres</td>
 <td class="coverageStat">
   <span class="percent">
     100%
@@ -54,15 +54,15 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (4/4)
+    (6/6)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    75%
+    95.6%
   </span>
   <span class="absValue">
-    (45/60)
+    (172/180)
   </span>
 </td>
 </tr>
@@ -74,120 +74,246 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 
 <pre>
-<code class="sourceCode" id="sourceCode">&nbsp;package server;
+<code class="sourceCode" id="sourceCode">&nbsp;package ORM.Database;
 &nbsp;
-&nbsp;import java.io.*;
-&nbsp;import java.net.Socket;
-&nbsp;import java.net.SocketTimeoutException;
-&nbsp;import java.util.*;
+&nbsp;import ORM.ClassTable.Column;
+&nbsp;import ORM.ClassTable.PrimaryKey;
 &nbsp;
-&nbsp;import server.exceptions.HttpInvalidException;
-&nbsp;import server.exceptions.HttpRequestTimeoutException;
+&nbsp;import java.lang.reflect.Field;
+&nbsp;import java.sql.*;
 &nbsp;
-&nbsp;public class HTTPSocket {
-&nbsp;    private Socket socket;
-&nbsp;    private BufferedReader reader;
-&nbsp;    private PrintWriter writer;
-&nbsp;
-<b class="fc">&nbsp;    public HTTPSocket(Socket serversocket, int timeOut){</b>
-<b class="fc">&nbsp;        socket = serversocket;</b>
+<b class="fc">&nbsp;public class DB_postgres implements DB{</b>
+&nbsp;    public &lt;T&gt; String insert(T obj) throws IllegalAccessException {
+<b class="fc">&nbsp;        Class&lt;?&gt; cl = obj.getClass();</b>
+<b class="fc">&nbsp;        String tableName = cl.getSimpleName().toLowerCase();</b>
+<b class="fc">&nbsp;        Field[] fields = cl.getDeclaredFields();</b>
+&nbsp;        // Insert the data into the table
+<b class="fc">&nbsp;        StringBuilder insertSql = new StringBuilder(&quot;INSERT INTO &quot; + tableName + &quot; (&quot;);</b>
+<b class="fc">&nbsp;        StringBuilder valuesSql = new StringBuilder(&quot;VALUES (&quot;);</b>
+<b class="fc">&nbsp;        int len = 0;</b>
+<b class="fc">&nbsp;        for(int i=0;i&lt;fields.length;i++){</b>
+<b class="fc">&nbsp;            if(fields[i].isAnnotationPresent(Column.class))</b>
+<b class="fc">&nbsp;                len = len+1;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int count=0;</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; fields.length; i++) {</b>
+<b class="fc">&nbsp;            Field field = fields[i];</b>
+<b class="fc">&nbsp;            if (field.isAnnotationPresent(Column.class)) {</b>
+<b class="fc">&nbsp;                String fieldName = field.getName().toLowerCase();</b>
+<b class="fc">&nbsp;                field.setAccessible(true);</b>
+<b class="fc">&nbsp;                String fieldType = &quot;&quot;;</b>
+<b class="fc">&nbsp;                if (field.isAnnotationPresent(Column.class)) {</b>
+<b class="fc">&nbsp;                    Column anno = field.getAnnotation(Column.class);</b>
+<b class="fc">&nbsp;                    if(field.get(obj)==null){</b>
+<b class="fc">&nbsp;                        valuesSql.append(&quot;NULL&quot;);</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    else if (field.getType() == int.class)</b>
+<b class="fc">&nbsp;                        valuesSql.append(field.getInt(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == String.class)</b>
+<b class="fc">&nbsp;                        valuesSql.append(&quot;&#39;&quot; + (String) field.get(obj) + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Float.class)</b>
+<b class="fc">&nbsp;                        valuesSql.append((Float)field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Boolean.class || field.getType() == boolean.class)</b>
+<b class="fc">&nbsp;                        valuesSql.append((Boolean)field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Date.class)</b>
+<b class="fc">&nbsp;                        valuesSql.append(&quot;&#39;&quot;+(Date) field.get(obj)+&quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Time.class)</b>
+<b class="fc">&nbsp;                        valuesSql.append(&quot;&#39;&quot;+(Time) field.get(obj)+&quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    insertSql.append(fieldName);</b>
+<b class="fc">&nbsp;                    if (count &lt; len - 1) {</b>
+<b class="fc">&nbsp;                        insertSql.append(&quot;, &quot;);</b>
+<b class="fc">&nbsp;                        valuesSql.append(&quot;, &quot;);</b>
+&nbsp;                    }
+&nbsp;                }
+<b class="fc">&nbsp;                count=count+1;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        insertSql.append(&quot;) &quot;);</b>
+<b class="fc">&nbsp;        valuesSql.append(&quot;);&quot;);</b>
+<b class="fc">&nbsp;        String finalQuery = insertSql.toString() + valuesSql.toString();</b>
+<b class="fc">&nbsp;        System.out.println(finalQuery);</b>
+<b class="fc">&nbsp;        return finalQuery;</b>
+&nbsp;    }
+&nbsp;    public &lt;T&gt; String delete(T obj) throws Exception {
+&nbsp;        //TODO: delete the given obj in database.
 &nbsp;        try {
-<b class="fc">&nbsp;			serversocket.setSoTimeout(timeOut);</b>
-<b class="fc">&nbsp;            InputStream inputStream = serversocket.getInputStream();</b>
-<b class="fc">&nbsp;            OutputStream outputStream = serversocket.getOutputStream();</b>
-<b class="fc">&nbsp;            reader = new BufferedReader(new InputStreamReader(inputStream));</b>
-<b class="fc">&nbsp;            writer = new PrintWriter(outputStream, true);</b>
-<b class="nc">&nbsp;        } catch (Exception e) {</b>
-<b class="nc">&nbsp;            System.out.println(e);</b>
-<b class="nc">&nbsp;            System.exit(-1);</b>
-<b class="fc">&nbsp;        }</b>
+<b class="fc">&nbsp;            Class&lt;?&gt; cl = obj.getClass();</b>
+<b class="fc">&nbsp;            String tableName = cl.getSimpleName().toLowerCase();</b>
+<b class="fc">&nbsp;            StringBuilder delete_query = new StringBuilder(&quot;DELETE FROM &quot;+tableName+&quot; WHERE &quot;);</b>
+<b class="fc">&nbsp;            Field[] fields = cl.getDeclaredFields();</b>
+<b class="fc">&nbsp;            int primLen = 0;</b>
+<b class="fc">&nbsp;            for(int i=0;i&lt; fields.length;i++){</b>
+<b class="fc">&nbsp;                Field field = fields[i];</b>
+<b class="fc">&nbsp;                if(field.isAnnotationPresent(Column.class)){</b>
+<b class="fc">&nbsp;                    if(field.isAnnotationPresent(PrimaryKey.class))</b>
+<b class="fc">&nbsp;                        primLen= primLen+1;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            int count=0;</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; fields.length; i++) {</b>
+<b class="fc">&nbsp;                Field field = fields[i];</b>
+<b class="fc">&nbsp;                String fieldName = field.getName().toLowerCase();</b>
+<b class="fc">&nbsp;                field.setAccessible(true);</b>
+<b class="fc">&nbsp;                if (field.isAnnotationPresent(Column.class)) {</b>
+<b class="fc">&nbsp;                    Column anno = field.getAnnotation(Column.class);</b>
+<b class="fc">&nbsp;                    if(!field.isAnnotationPresent(PrimaryKey.class))</b>
+<b class="fc">&nbsp;                        continue;</b>
+<b class="fc">&nbsp;                    delete_query.append(fieldName);</b>
+<b class="fc">&nbsp;                    if (field.getType() == int.class)</b>
+<b class="fc">&nbsp;                        delete_query.append(&quot;=&quot; + field.getInt(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == String.class)</b>
+<b class="fc">&nbsp;                        delete_query.append( &quot;=&quot; + &quot;&#39;&quot; + (String) field.get(obj) + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Float.class)</b>
+<b class="fc">&nbsp;                        delete_query.append(&quot;=&quot; + (Float)field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Boolean.class || field.getType() == boolean.class)</b>
+<b class="fc">&nbsp;                        delete_query.append(&quot;=&quot; + (Boolean)field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Date.class)</b>
+<b class="fc">&nbsp;                        delete_query.append(&quot;=&quot; + &quot;&#39;&quot;+(Date) field.get(obj)+&quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Time.class)</b>
+<b class="fc">&nbsp;                        delete_query.append(&quot;=&quot; + &quot;&#39;&quot;+(Time) field.get(obj)+&quot;&#39;&quot;);</b>
+&nbsp;                }
+<b class="fc">&nbsp;                if (count &lt; primLen- 1) {</b>
+<b class="fc">&nbsp;                    delete_query.append(&quot; AND &quot;);</b>
+&nbsp;                }
+<b class="fc">&nbsp;                count = count+1;</b>
+&nbsp;            }
+<b class="fc">&nbsp;            System.out.println(delete_query.toString());</b>
+<b class="fc">&nbsp;            return delete_query.toString();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch(Exception e){</b>
+<b class="nc">&nbsp;            throw new Exception(&quot;Error creating delete query. Error = &quot; +e);</b>
+&nbsp;        }
 &nbsp;    }
 &nbsp;
-&nbsp;	public Request waitRequest() {
-&nbsp;		// Parse request line
-&nbsp;		try {
-&nbsp;			String[] requestLine;
-&nbsp;			while(true){
-&nbsp;				try{
-<b class="fc">&nbsp;					requestLine = (reader.readLine()).split(&quot; &quot;);</b>
-<b class="fc">&nbsp;					break;</b>
-<b class="nc">&nbsp;				}catch (SocketTimeoutException se){</b>
-<b class="nc">&nbsp;					continue;</b>
-&nbsp;				}
-&nbsp;			}
-&nbsp;
-<b class="fc">&nbsp;			if(requestLine.length != 3){</b>
-<b class="nc">&nbsp;				throw new HttpInvalidException(&quot;Invalid HTTP request&quot;);</b>
-&nbsp;			}
-&nbsp;
-<b class="fc">&nbsp;			String method = requestLine[0];</b>
-<b class="fc">&nbsp;			String[] uri = requestLine[1].split(&quot;\\?&quot;);</b>
-<b class="fc">&nbsp;			if(uri.length &gt; 2){</b>
-<b class="nc">&nbsp;				throw new HttpInvalidException(&quot;Invalid HTTP request&quot;);</b>
-&nbsp;			}
-&nbsp;
-<b class="fc">&nbsp;			Route route = new Route(method, uri[0]);</b>
-<b class="fc">&nbsp;			String version = requestLine[2];</b>
-&nbsp;
-<b class="fc">&nbsp;			Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</b>
-<b class="fc">&nbsp;			if(uri.length == 2){</b>
-<b class="nc">&nbsp;				String[] parameters = uri[1].split(&quot;&amp;&quot;);</b>
-<b class="nc">&nbsp;				for(int i = 0; i &lt; parameters.length; i++){</b>
-<b class="nc">&nbsp;					String[] p = parameters[i].split(&quot;=&quot;);</b>
-<b class="nc">&nbsp;					if(p.length != 2) throw new HttpInvalidException(&quot;Invalid Exception&quot;);</b>
-<b class="nc">&nbsp;					params.put(p[0], p[1]);</b>
-&nbsp;				}
-&nbsp;			}
-&nbsp;
-&nbsp;
-&nbsp;			// Parse headers
-<b class="fc">&nbsp;			Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</b>
-<b class="fc">&nbsp;			List&lt;String&gt; cookies = new ArrayList&lt;&gt;();</b>
-&nbsp;
-&nbsp;			String line;
-&nbsp;			try{
-<b class="fc">&nbsp;				while ((line = reader.readLine()).length() &gt; 0) {</b>
-<b class="fc">&nbsp;					String[] header = line.split(&quot;: &quot;);</b>
-<b class="fc">&nbsp;					if(header.length != 2){</b>
-<b class="nc">&nbsp;						throw new HttpInvalidException(&quot;Invalid HTTP request&quot;);</b>
-&nbsp;					}
-<b class="fc">&nbsp;					String headerName = header[0];</b>
-<b class="fc">&nbsp;					String headerValue = header[1];</b>
-<b class="fc">&nbsp;					headers.put(headerName, headerValue);</b>
-<b class="fc">&nbsp;					if (headerName.equalsIgnoreCase(&quot;cookie&quot;)) {</b>
-<b class="fc">&nbsp;						cookies.addAll(Arrays.asList(headerValue.split(&quot;; &quot;)));</b>
-&nbsp;					}
-<b class="fc">&nbsp;				}</b>
-<b class="fc">&nbsp;			}catch(SocketTimeoutException e){</b>
-<b class="fc">&nbsp;				throw new HttpRequestTimeoutException(&quot;Connection Timed Out while waiting for Request&quot;);</b>
-<b class="fc">&nbsp;			}</b>
-&nbsp;
-&nbsp;			// Parse body
-<b class="fc">&nbsp;			String body = &quot;&quot;;</b>
-<b class="fc">&nbsp;			String contentLen = headers.get(&quot;Content-Length&quot;);</b>
-<b class="fc">&nbsp;			int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;</b>
-<b class="fc">&nbsp;			char[] charBuf = new char[bodyLen];</b>
-&nbsp;			try{
-<b class="fc">&nbsp;				reader.read(charBuf);</b>
-<b class="fc">&nbsp;				body = new String(charBuf);</b>
-<b class="nc">&nbsp;			}catch(SocketTimeoutException e){</b>
-<b class="nc">&nbsp;				throw new HttpRequestTimeoutException(&quot;Connection Timed Out while waiting for Request&quot;);</b>
-<b class="fc">&nbsp;			}</b>
-&nbsp;
-<b class="fc">&nbsp;			return new Request(route, version, headers, cookies, params, body);</b>
-<b class="fc">&nbsp;		} catch (Exception e){</b>
-<b class="fc">&nbsp;			System.out.println(e);</b>
-<b class="fc">&nbsp;			return null;</b>
-&nbsp;		}
+&nbsp;    public &lt;T&gt; String update(T obj) throws Exception {
+&nbsp;        //TODO: update the given obj in database
+&nbsp;        try {
+<b class="fc">&nbsp;            Class&lt;?&gt; cl = obj.getClass();</b>
+<b class="fc">&nbsp;            String tableName = cl.getSimpleName().toLowerCase();</b>
+<b class="fc">&nbsp;            StringBuilder update_query = new StringBuilder(&quot;UPDATE &quot;+tableName+ &quot; SET &quot;);</b>
+<b class="fc">&nbsp;            Field[] fields = cl.getDeclaredFields();</b>
+<b class="fc">&nbsp;            int primLen = 0;</b>
+<b class="fc">&nbsp;            int len =0;</b>
+<b class="fc">&nbsp;            for(int i=0;i&lt; fields.length;i++){</b>
+<b class="fc">&nbsp;                Field field = fields[i];</b>
+<b class="fc">&nbsp;                if(field.isAnnotationPresent(Column.class)){</b>
+<b class="fc">&nbsp;                    if(field.isAnnotationPresent(PrimaryKey.class))</b>
+<b class="fc">&nbsp;                        primLen= primLen+1;</b>
+<b class="fc">&nbsp;                    len = len+1;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            int count=0;</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; fields.length; i++) {</b>
+<b class="fc">&nbsp;                Field field = fields[i];</b>
+<b class="fc">&nbsp;                if (field.isAnnotationPresent(Column.class)) {</b>
+<b class="fc">&nbsp;                    String fieldName = field.getName().toLowerCase();</b>
+<b class="fc">&nbsp;                    field.setAccessible(true);</b>
+<b class="fc">&nbsp;                    update_query.append(fieldName+ &quot;=&quot;);</b>
+<b class="fc">&nbsp;                    if (field.getType() == int.class)</b>
+<b class="fc">&nbsp;                        update_query.append(field.getInt(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == String.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;&#39;&quot; + (String) field.get(obj) + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Float.class)</b>
+<b class="fc">&nbsp;                        update_query.append((Float)field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Boolean.class || field.getType() == boolean.class)</b>
+<b class="fc">&nbsp;                        update_query.append((Boolean)field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Date.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;&#39;&quot;+(Date) field.get(obj)+&quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Time.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;&#39;&quot;+(Time) field.get(obj)+&quot;&#39;&quot;);</b>
+&nbsp;                    else{
+<b class="nc">&nbsp;                        update_query.append(&quot;&#39;&quot; + (String)field.get(obj).toString()+&quot;&#39;&quot;);</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    if (count &lt; len - 1) {</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;, &quot;);</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    count=count+1;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            update_query.append(&quot; WHERE &quot;);</b>
+<b class="fc">&nbsp;            count=0;</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; fields.length; i++) {</b>
+<b class="fc">&nbsp;                Field field = fields[i];</b>
+<b class="fc">&nbsp;                String fieldName = field.getName().toLowerCase();</b>
+<b class="fc">&nbsp;                field.setAccessible(true);</b>
+<b class="fc">&nbsp;                if (field.isAnnotationPresent(Column.class)) {</b>
+<b class="fc">&nbsp;                    if (!field.isAnnotationPresent(PrimaryKey.class))</b>
+<b class="fc">&nbsp;                        continue;</b>
+<b class="fc">&nbsp;                    update_query.append(fieldName);</b>
+<b class="fc">&nbsp;                    if (field.getType() == int.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;=&quot; + field.getInt(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == String.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;=&quot; + &quot;&#39;&quot; + (String) field.get(obj) + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Float.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;=&quot; + (Float) field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Boolean.class || field.getType() == boolean.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;=&quot; + (Boolean) field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Date.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;=&quot; + &quot;&#39;&quot; + (Date) field.get(obj) + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Time.class)</b>
+<b class="fc">&nbsp;                        update_query.append(&quot;=&quot; + &quot;&#39;&quot; + (Time) field.get(obj) + &quot;&#39;&quot;);</b>
+&nbsp;                    else
+<b class="nc">&nbsp;                        update_query.append(&quot;=&quot; + &quot;&#39;&quot; + (String) field.get(obj).toString() + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    if (count &lt; primLen - 1) {</b>
+<b class="fc">&nbsp;                        update_query.append(&quot; AND &quot;);</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    count = count+1;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            System.out.println(update_query.toString());</b>
+<b class="fc">&nbsp;            return update_query.toString();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch(Exception e){</b>
+<b class="nc">&nbsp;           throw new Exception(&quot;Error creating update query. Message = &quot;+e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    public &lt;T&gt; String doesExist(T obj) throws IllegalAccessException {
+&nbsp;        //TODO: T obj&#39;s primaryKEY exists.
+<b class="fc">&nbsp;        Class&lt;?&gt; cl=obj.getClass();</b>
+<b class="fc">&nbsp;        String tableName = cl.getSimpleName().toLowerCase();</b>
+<b class="fc">&nbsp;        StringBuilder query=new StringBuilder(&quot;select count(*) from &quot;+tableName+&quot; where &quot;);</b>
+<b class="fc">&nbsp;        Field[] fields = cl.getDeclaredFields();</b>
+<b class="fc">&nbsp;        int flag=0;</b>
+<b class="fc">&nbsp;        for(int i=0;i&lt; fields.length;i++){</b>
+<b class="fc">&nbsp;            Field field = fields[i];</b>
+<b class="fc">&nbsp;            field.setAccessible(true);</b>
+<b class="fc">&nbsp;            if(field.isAnnotationPresent(Column.class)){</b>
+<b class="fc">&nbsp;                if(field.isAnnotationPresent(PrimaryKey.class))</b>
+&nbsp;                {
+<b class="fc">&nbsp;                    if(flag==1)</b>
+&nbsp;                    {
+<b class="fc">&nbsp;                        query.append(&quot; and &quot;);</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    else{flag=1;}</b>
+<b class="fc">&nbsp;                    query.append(field.getName().toLowerCase()+&quot; &quot;);</b>
+<b class="fc">&nbsp;                    if (field.getType() == int.class)</b>
+<b class="fc">&nbsp;                        query.append(&quot;=&quot; + field.getInt(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == String.class)</b>
+<b class="fc">&nbsp;                        query.append(&quot;=&quot; + &quot;&#39;&quot; + (String) field.get(obj) + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Float.class)</b>
+<b class="nc">&nbsp;                        query.append(&quot;=&quot; + (Float) field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Boolean.class || field.getType() == boolean.class)</b>
+<b class="fc">&nbsp;                        query.append(&quot;=&quot; + (Boolean) field.get(obj));</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Date.class)</b>
+<b class="fc">&nbsp;                        query.append(&quot;=&quot; + &quot;&#39;&quot; + (Date) field.get(obj) + &quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Time.class || field.getType() == Timestamp.class)</b>
+<b class="fc">&nbsp;                        query.append(&quot;=&quot; + &quot;&#39;&quot; + (Timestamp) field.get(obj) + &quot;&#39;&quot;);</b>
+&nbsp;                    else
+<b class="nc">&nbsp;                        query.append(&quot;=&quot; + &quot;&#39;&quot; + (String) field.get(obj).toString() + &quot;&#39;&quot;);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        query.append(&quot; ;&quot;);</b>
+<b class="fc">&nbsp;        System.out.println(query.toString());</b>
+<b class="fc">&nbsp;        return query.toString();</b>
 &nbsp;    }
 &nbsp;
-&nbsp;    public void closeConnection() throws IOException {
-<b class="fc">&nbsp;        socket.close();</b>
+&nbsp;    public &lt;T&gt; String getAll(Class &lt;T&gt; cl){
+<b class="fc">&nbsp;        String tableName = cl.getSimpleName().toLowerCase();</b>
+<b class="fc">&nbsp;        String query = &quot;SELECT * FROM &quot; + tableName;</b>
+<b class="fc">&nbsp;        return query;</b>
 &nbsp;    }
 &nbsp;
-&nbsp;    public void sendResponse(Response msg){
-<b class="fc">&nbsp;        writer.println(msg);</b>
-&nbsp;    }
 &nbsp;}
 </code>
 </pre>
@@ -212,7 +338,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2023-04-27 18:34</div>
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
 </div>
 </body>
 </html>

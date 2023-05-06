@@ -23,7 +23,7 @@ public class Resource {
 
     }
 
-	Resource loadData(Object arg0) throws IOException, InvalidResourceTypeException{
+	public Resource loadData(Object arg0) throws IOException, InvalidResourceTypeException{
         switch (type){
             case "text":
                 data = arg0.toString();

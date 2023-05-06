@@ -1,0 +1,224 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > Request</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: Request (server)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Request</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    27.3%
+  </span>
+  <span class="absValue">
+    (3/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    40.4%
+  </span>
+  <span class="absValue">
+    (21/52)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;
+&nbsp;import java.io.UnsupportedEncodingException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;public class Request {
+&nbsp;	protected Route route;
+<b class="fc">&nbsp;	protected String version = &quot;HTTP/1.1&quot;;</b>
+<b class="fc">&nbsp;	protected Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;	protected Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;	protected List&lt;String&gt; cookies = new ArrayList&lt;&gt;();</b>
+&nbsp;	protected byte[] body;
+&nbsp;
+&nbsp;	public String getMethod() {
+<b class="nc">&nbsp;		return route.Method;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String getPath() {
+<b class="fc">&nbsp;		return route.Path;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String getVersion() {
+<b class="nc">&nbsp;		return version;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Map&lt;String, String&gt; getHeaders() {
+<b class="nc">&nbsp;		return headers;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public List&lt;String&gt; getCookies() {
+<b class="nc">&nbsp;		return cookies;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public byte[] getBody() {
+<b class="nc">&nbsp;		return body;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String getCharset(){
+<b class="nc">&nbsp;		if (this.getHeaders().get(&quot;content-type&quot;) == null){</b>
+<b class="nc">&nbsp;			return null;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		String[] vals = this.getHeaders().get(&quot;content-type&quot;).strip().split(&quot;;&quot;);</b>
+<b class="nc">&nbsp;		if(vals.length &gt; 2){</b>
+<b class="nc">&nbsp;			return null;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		if(vals.length == 1){</b>
+<b class="nc">&nbsp;			return &quot;ISO-8859-1&quot;;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		if(vals[1].strip().split(&quot;=&quot;).length != 2){</b>
+<b class="nc">&nbsp;			return null;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		if(vals[1].strip().split(&quot;=&quot;)[0].strip().equals(&quot;charset&quot;)){</b>
+<b class="nc">&nbsp;			return vals[1].strip().split(&quot;=&quot;)[1].strip();</b>
+&nbsp;		}else{
+<b class="nc">&nbsp;			return &quot;ISO-8859-1&quot;;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		
+&nbsp;	}
+&nbsp;
+&nbsp;	public String getParameterValue(String parameter){
+<b class="nc">&nbsp;		return params.get(parameter);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Map&lt;String, String&gt; requestAsForm(){
+<b class="fc">&nbsp;		String type = headers.get(&quot;content-type&quot;);</b>
+<b class="fc">&nbsp;		if(type != null &amp;&amp; type.contains(&quot;application/x-www-form-urlencoded&quot;)){</b>
+&nbsp;			try {
+<b class="fc">&nbsp;				String sbody = new String(body, &quot;US-ASCII&quot;);</b>
+<b class="fc">&nbsp;				String[] parameters = sbody.split(&quot;&amp;&quot;);</b>
+<b class="fc">&nbsp;				HashMap&lt;String, String&gt; mp = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;				for(int i = 0; i &lt; parameters.length; i++){</b>
+<b class="fc">&nbsp;					String[] p = parameters[i].split(&quot;=&quot;);</b>
+<b class="fc">&nbsp;					if(p.length != 2){</b>
+<b class="nc">&nbsp;						return null;</b>
+&nbsp;					}
+<b class="fc">&nbsp;					mp.put(p[0].strip(), p[1].strip());</b>
+&nbsp;				}
+<b class="fc">&nbsp;				return mp;</b>
+<b class="nc">&nbsp;			} catch (UnsupportedEncodingException e) {</b>
+<b class="nc">&nbsp;				e.printStackTrace();</b>
+<b class="nc">&nbsp;				return null;</b>
+&nbsp;			}
+&nbsp;		}else{
+<b class="nc">&nbsp;			return null;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public String toString() {
+<b class="nc">&nbsp;		StringBuilder builder = new StringBuilder();</b>
+<b class="nc">&nbsp;		builder.append(route.Method).append(&quot; &quot;).append(route.Path).append(&quot; &quot;).append(version).append(&quot;\n&quot;);</b>
+<b class="nc">&nbsp;		for (String key : headers.keySet()) {</b>
+<b class="nc">&nbsp;			builder.append(key).append(&quot;: &quot;).append(headers.get(key)).append(&quot;\n&quot;);</b>
+<b class="nc">&nbsp;		}</b>
+<b class="nc">&nbsp;		builder.append(&quot;\n&quot;);</b>
+<b class="nc">&nbsp;		builder.append(body);</b>
+<b class="nc">&nbsp;		return builder.toString();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Request(
+&nbsp;			Route route,
+&nbsp;			Map&lt;String, String&gt; headers,
+&nbsp;			List&lt;String&gt; cookies,
+&nbsp;			Map&lt;String, String&gt; params,
+&nbsp;			byte[] body
+<b class="fc">&nbsp;		){</b>
+<b class="fc">&nbsp;		this.route = route;</b>
+<b class="fc">&nbsp;		this.body = body;</b>
+<b class="fc">&nbsp;		this.cookies = cookies;</b>
+<b class="fc">&nbsp;		this.headers = headers;</b>
+<b class="fc">&nbsp;		this.params = params;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
+</div>
+</body>
+</html>

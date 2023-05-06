@@ -1,0 +1,151 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > Invocation</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: Invocation (server)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Invocation</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (2/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (16/20)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;
+&nbsp;import java.lang.reflect.InvocationTargetException;
+&nbsp;import java.lang.reflect.Method;
+&nbsp;
+&nbsp;public class Invocation {
+&nbsp;
+&nbsp;    private Object object;
+&nbsp;    private Method method;
+&nbsp;	private String[] paramMask;
+&nbsp;
+&nbsp;	public String[] getParameterMask(){
+<b class="nc">&nbsp;		return paramMask;</b>
+&nbsp;	}
+&nbsp;
+<b class="fc">&nbsp;    public Invocation(Object object, Method method, String path){</b>
+<b class="fc">&nbsp;        this.object = object;</b>
+<b class="fc">&nbsp;        this.method = method;</b>
+<b class="fc">&nbsp;		String[] hooks = path.split(&quot;/&quot;);</b>
+<b class="fc">&nbsp;		paramMask = new String[hooks.length];</b>
+<b class="fc">&nbsp;		for(int i = 0; i &lt; hooks.length; i++){</b>
+<b class="fc">&nbsp;			if(hooks[i].length() == 0)	continue;</b>
+<b class="fc">&nbsp;			if(hooks[i].charAt(0) == &#39;{&#39; &amp;&amp; hooks[i].charAt(hooks[i].length()-1) == &#39;}&#39;){</b>
+<b class="fc">&nbsp;				paramMask[i] = hooks[i].substring(1, hooks[i].length()-1);</b>
+&nbsp;			}else{
+<b class="fc">&nbsp;				paramMask[i] = null;</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;    }
+&nbsp;
+&nbsp;    public Object invoke(Request request) throws InvocationTargetException{
+&nbsp;
+<b class="fc">&nbsp;		String[] hooks = request.getPath().split(&quot;/&quot;);</b>
+<b class="fc">&nbsp;		for(int i = 0; i &lt; paramMask.length; i++){</b>
+<b class="fc">&nbsp;			if(paramMask[i] != null){</b>
+<b class="fc">&nbsp;				request.params.put(paramMask[i], hooks[i]);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;		try{
+<b class="fc">&nbsp;			System.out.println(method.getName()+&quot;: &quot;+method.getClass());</b>
+<b class="fc">&nbsp;			return method.invoke(object, request);</b>
+<b class="nc">&nbsp;		} catch(IllegalAccessException e){</b>
+<b class="nc">&nbsp;			e.printStackTrace();</b>
+<b class="nc">&nbsp;			return null;</b>
+&nbsp;		}
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
+</div>
+</body>
+</html>

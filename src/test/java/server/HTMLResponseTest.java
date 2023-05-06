@@ -2,6 +2,10 @@ package server;
 
 import org.junit.jupiter.api.Test;
 
+import server.HTMLResponse;
+import server.Resource;
+import server.Server;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;

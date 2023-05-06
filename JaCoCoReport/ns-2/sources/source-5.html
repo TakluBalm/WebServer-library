@@ -1,0 +1,251 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > SessionFactory</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">ORM.Manager</a>
+</div>
+
+<h1>Coverage Summary for Class: SessionFactory (ORM.Manager)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SessionFactory</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    89.9%
+  </span>
+  <span class="absValue">
+    (80/89)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package ORM.Manager;
+&nbsp;
+&nbsp;import ORM.ClassTable.PrimaryKey;
+&nbsp;import io.github.classgraph.AnnotationInfo;
+&nbsp;import io.github.classgraph.ClassGraph;
+&nbsp;import io.github.classgraph.ScanResult;
+&nbsp;import java.lang.reflect.Field;
+&nbsp;import java.sql.*;
+&nbsp;import java.util.HashSet;
+&nbsp;import java.util.List;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;import ORM.ClassTable.Column;
+&nbsp;
+&nbsp;public class SessionFactory {
+&nbsp;
+&nbsp;        Config config;
+&nbsp;        private String packageName;
+<b class="fc">&nbsp;        boolean reset = false;</b>
+&nbsp;
+<b class="nc">&nbsp;        SessionFactory(Config configObj) throws  Exception{</b>
+<b class="nc">&nbsp;            this.config = configObj;</b>
+<b class="nc">&nbsp;            createTable();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        SessionFactory(Config configObj,boolean reset) throws  Exception{</b>
+<b class="fc">&nbsp;            this.config = configObj;</b>
+<b class="fc">&nbsp;            if(reset==true){</b>
+<b class="fc">&nbsp;                reset();</b>
+&nbsp;            }
+<b class="fc">&nbsp;            createTable();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        private static List&lt;Class&lt;?&gt;&gt; findAnnotatedClasses()
+&nbsp;                throws Exception {
+<b class="fc">&nbsp;            Set&lt;Class&lt;?&gt;&gt; set = new HashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;            ScanResult sr = new ClassGraph().enableAllInfo().scan();</b>
+<b class="fc">&nbsp;            sr.getAllClasses().forEach(classInfo -&gt; {</b>
+<b class="fc">&nbsp;                AnnotationInfo u = classInfo.getAnnotationInfo(&quot;ORM.ClassTable.Table&quot;);</b>
+<b class="fc">&nbsp;                if(u != null){</b>
+<b class="fc">&nbsp;                    Class&lt;?&gt; annotatedClass = classInfo.loadClass();</b>
+<b class="fc">&nbsp;                    set.add(annotatedClass);</b>
+&nbsp;                }
+&nbsp;            });
+<b class="fc">&nbsp;            List&lt;Class&lt;?&gt;&gt; annotatedClasses = new ArrayList&lt;&gt;(set);</b>
+<b class="fc">&nbsp;            return annotatedClasses;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        public &lt;T&gt; void createClassTable(Class&lt;T&gt; cl,Connection con) throws SQLException {
+<b class="fc">&nbsp;            String tableName = cl.getSimpleName().toLowerCase();</b>
+<b class="fc">&nbsp;            System.out.println(tableName);</b>
+<b class="fc">&nbsp;            StringBuilder createTableSql = new StringBuilder(&quot;CREATE TABLE IF NOT EXISTS &quot; + tableName + &quot;(&quot;);</b>
+<b class="fc">&nbsp;            Field[] fields = cl.getDeclaredFields();</b>
+<b class="fc">&nbsp;            int len = 0;</b>
+<b class="fc">&nbsp;            int primLen  =0;</b>
+<b class="fc">&nbsp;            for(int i=0;i&lt;fields.length;i++){</b>
+<b class="fc">&nbsp;                if(fields[i].isAnnotationPresent(Column.class)) {</b>
+<b class="fc">&nbsp;                    len = len + 1;</b>
+<b class="fc">&nbsp;                    if(fields[i].isAnnotationPresent(PrimaryKey.class))</b>
+<b class="fc">&nbsp;                        primLen = primLen+1;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            String pk = &quot;PRIMARY KEY (&quot;;</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; fields.length; i++) {</b>
+<b class="fc">&nbsp;                Field field = fields[i];</b>
+<b class="fc">&nbsp;                String fieldName = field.getName().toLowerCase();</b>
+<b class="fc">&nbsp;                String fieldType = &quot;&quot;;</b>
+<b class="fc">&nbsp;                if(field.isAnnotationPresent(Column.class)) {</b>
+<b class="fc">&nbsp;                    if (field.getType() == int.class)</b>
+<b class="fc">&nbsp;                        fieldType = &quot;INT&quot;;</b>
+<b class="fc">&nbsp;                    else if (field.getType() == String.class)</b>
+<b class="fc">&nbsp;                        fieldType = &quot;VARCHAR&quot;;</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Float.class || field.getType() == float.class)</b>
+<b class="fc">&nbsp;                        fieldType = &quot;FLOAT&quot;;</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Boolean.class || field.getType() == boolean.class)</b>
+<b class="fc">&nbsp;                        fieldType = &quot;BOOLEAN&quot;;</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Date.class)</b>
+<b class="fc">&nbsp;                        fieldType = &quot;date&quot;;</b>
+<b class="fc">&nbsp;                    else if (field.getType() == Time.class)</b>
+<b class="fc">&nbsp;                        fieldType = &quot;TIME&quot;;</b>
+&nbsp;                    else {
+<b class="nc">&nbsp;                        throw new SQLException(&quot;TYPE &quot;+field.getType()+&quot; in &quot;+tableName+&quot; is not accepted. Correct it!&quot;);</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    createTableSql.append(fieldName).append(&quot; &quot;).append(fieldType);</b>
+<b class="fc">&nbsp;                    createTableSql.append(&quot;, &quot;);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            int count=0;</b>
+<b class="fc">&nbsp;            for(int i=0;i&lt; fields.length;i++){</b>
+<b class="fc">&nbsp;                if(fields[i].isAnnotationPresent(Column.class) &amp;&amp; fields[i].isAnnotationPresent(PrimaryKey.class)){</b>
+<b class="fc">&nbsp;                    pk = pk  + fields[i].getName().toLowerCase();</b>
+<b class="fc">&nbsp;                    if(count&lt; primLen-1){</b>
+<b class="fc">&nbsp;                        pk+= &quot;,&quot;;</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    count = count+1;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            pk+= &quot;)&quot;;</b>
+<b class="fc">&nbsp;            if(primLen!=0) {</b>
+<b class="fc">&nbsp;                createTableSql.append(pk+&quot;)&quot;);</b>
+<b class="fc">&nbsp;                System.out.println(createTableSql);</b>
+<b class="fc">&nbsp;                Statement stmt = con.createStatement();</b>
+<b class="fc">&nbsp;                stmt.executeUpdate(createTableSql.toString());</b>
+<b class="fc">&nbsp;            }else{</b>
+<b class="nc">&nbsp;                throw new SQLException(&quot;There should be atleast one primary key in the table &quot; + tableName);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        public void createTable() throws Exception{
+&nbsp;            Connection con;
+&nbsp;            //create table
+&nbsp;            try {
+<b class="fc">&nbsp;                con = DriverManager.getConnection(config.url, config.username, config.password);</b>
+<b class="fc">&nbsp;                System.out.println(&quot;Connection established&quot;);</b>
+<b class="fc">&nbsp;                List&lt;Class&lt;?&gt;&gt; tableClass =findAnnotatedClasses();</b>
+<b class="fc">&nbsp;                for(Class&lt;?&gt; c: tableClass){</b>
+<b class="fc">&nbsp;                    createClassTable(c,con);</b>
+<b class="fc">&nbsp;                }</b>
+<b class="nc">&nbsp;            }catch (Exception e){</b>
+<b class="nc">&nbsp;                System.out.println((&quot;Error connecting to database. Message = &quot; + e.toString()));</b>
+<b class="fc">&nbsp;            }</b>
+&nbsp;
+&nbsp;        }
+&nbsp;        public Session getSession() throws Exception{
+&nbsp;            //new session with a new connection variable.
+<b class="fc">&nbsp;            Connection con = DriverManager.getConnection(config.url, config.username, config.password);</b>
+<b class="fc">&nbsp;            Session s = new Session(con);</b>
+<b class="fc">&nbsp;            return s;</b>
+&nbsp;        }
+&nbsp;        public void reset() throws Exception {
+&nbsp;            //delete all exists tables with same name.
+<b class="fc">&nbsp;            List&lt;Class&lt;?&gt;&gt; all=findAnnotatedClasses();</b>
+&nbsp;            Connection conn;
+&nbsp;            try {
+<b class="fc">&nbsp;                conn = DriverManager.getConnection(config.url, config.username, config.password);</b>
+<b class="fc">&nbsp;                for(Class&lt;?&gt; clazz : findAnnotatedClasses())</b>
+&nbsp;                {
+<b class="fc">&nbsp;                    String tableName = clazz.getSimpleName().toLowerCase();</b>
+<b class="fc">&nbsp;                    StringBuilder delete_sql=new StringBuilder(&quot;DROP TABLE IF EXISTS &quot;+tableName);</b>
+<b class="fc">&nbsp;                    Statement stmt = conn.createStatement();</b>
+<b class="fc">&nbsp;                    System.out.println(delete_sql);</b>
+<b class="fc">&nbsp;                    stmt.executeUpdate(delete_sql.toString());</b>
+<b class="fc">&nbsp;                }</b>
+<b class="nc">&nbsp;            }catch (Exception e){</b>
+<b class="nc">&nbsp;                System.out.println((&quot;Error connecting to database. Message = &quot; + e.toString()));</b>
+<b class="fc">&nbsp;            }</b>
+&nbsp;        }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
+</div>
+</body>
+</html>

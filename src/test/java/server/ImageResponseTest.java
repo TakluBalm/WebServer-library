@@ -2,6 +2,9 @@ package server;
 
 import org.junit.jupiter.api.Test;
 
+import server.ImageResponse;
+import server.Server;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;

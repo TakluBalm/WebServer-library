@@ -1,6 +1,11 @@
 package server;
 
 import org.junit.jupiter.api.Test;
+
+import server.Invocation;
+import server.Route;
+import server.RouteMap;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class RouteMapTest {

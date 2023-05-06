@@ -26,7 +26,7 @@ public class HTTPSocket {
 	private String readLine() throws IOException{
         StringBuilder sb = new StringBuilder();
         int c = inputStream.read();
-        while (c != -1 && c != '\n') {
+        while (c != '\n') {
             if (c != '\r') {
                 sb.append((char) c);
             }
@@ -73,6 +73,7 @@ public class HTTPSocket {
 					continue;
 				}
 
+
 				Map<String, String> params = new HashMap<>();
 				boolean reset = false;
 				if(uri.length == 2){
@@ -89,6 +90,7 @@ public class HTTPSocket {
 				}
 				if(reset)	continue;
 				reset = false;
+
 
 
 				// Parse headers
@@ -115,6 +117,7 @@ public class HTTPSocket {
 				if(reset)	continue;
 				reset = false;
 
+
 				// Parse body
 				String contentLen = headers.get("content-length");
 				String contentEncoding = headers.get("content-encoding");
@@ -135,7 +138,7 @@ public class HTTPSocket {
 			}
 		} catch (HttpRequestTimeoutException e){
 			e.printStackTrace();
-			sendStatusCode(408);
+			// sendStatusCode(408);
 			return null;
 		} catch (IOException e){
 			e.printStackTrace();

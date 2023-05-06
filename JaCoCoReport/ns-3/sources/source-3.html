@@ -1,0 +1,135 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > ImageResponse</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: ImageResponse (server)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ImageResponse</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (14/16)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;import java.io.*;
+&nbsp;import java.nio.file.Files;
+&nbsp;import java.nio.file.Path;
+&nbsp;import java.nio.file.Paths;
+&nbsp;
+&nbsp;public class ImageResponse extends Response {
+<b class="fc">&nbsp;    public String imagePath = &quot;&quot;;</b>
+<b class="fc">&nbsp;    public String extension = &quot;&quot;;</b>
+&nbsp;    public ImageResponse(String version, String imagePath) {
+<b class="fc">&nbsp;        super(version);</b>
+<b class="fc">&nbsp;        this.imagePath = imagePath;</b>
+<b class="fc">&nbsp;        String[] splitPath = imagePath.split(&quot;\\.&quot;);</b>
+<b class="fc">&nbsp;        this.extension = splitPath[splitPath.length - 1];</b>
+<b class="fc">&nbsp;        this.setHeader(&quot;Content-Type&quot;, &quot;image/&quot; + extension);</b>
+<b class="fc">&nbsp;        this.setBody(this.imagePath);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ImageResponse setBody(String imagePath) {
+&nbsp;
+<b class="fc">&nbsp;        byte[] imageData = null;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            Path path = Paths.get(imagePath);</b>
+&nbsp;//            long size = Files.size(path);
+<b class="fc">&nbsp;            imageData = Files.readAllBytes(path);</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            System.out.println(e);</b>
+<b class="fc">&nbsp;        }</b>
+<b class="fc">&nbsp;        super.setBody(imageData);</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
+</div>
+</body>
+</html>

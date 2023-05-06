@@ -1,0 +1,301 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > HTTPSocket</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: HTTPSocket (server)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">HTTPSocket</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    62.6%
+  </span>
+  <span class="absValue">
+    (67/107)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.net.Socket;
+&nbsp;import java.net.SocketException;
+&nbsp;import java.net.SocketTimeoutException;
+&nbsp;import java.util.*;
+&nbsp;import java.util.zip.*;
+&nbsp;
+&nbsp;import server.exceptions.HttpRequestTimeoutException;
+&nbsp;
+&nbsp;public class HTTPSocket {
+&nbsp;    private Socket socket;
+&nbsp;    private PrintWriter writer;
+&nbsp;	InputStream inputStream;
+&nbsp;	OutputStream outputStream;
+&nbsp;
+<b class="fc">&nbsp;    public HTTPSocket(Socket serversocket, int timeout) throws SocketException, IOException{</b>
+<b class="fc">&nbsp;        socket = serversocket;</b>
+<b class="fc">&nbsp;		socket.setSoTimeout(timeout);</b>
+<b class="fc">&nbsp;		inputStream = serversocket.getInputStream();</b>
+<b class="fc">&nbsp;		outputStream = serversocket.getOutputStream();</b>
+<b class="fc">&nbsp;		writer = new PrintWriter(outputStream, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;	private String readLine() throws IOException{
+<b class="fc">&nbsp;        StringBuilder sb = new StringBuilder();</b>
+<b class="fc">&nbsp;        int c = inputStream.read();</b>
+<b class="fc">&nbsp;        while (c != -1 &amp;&amp; c != &#39;\n&#39;) {</b>
+<b class="fc">&nbsp;            if (c != &#39;\r&#39;) {</b>
+<b class="fc">&nbsp;                sb.append((char) c);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            c = inputStream.read();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (c == -1 &amp;&amp; sb.length() == 0) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return sb.toString();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private String timedRead() throws HttpRequestTimeoutException, IOException{
+&nbsp;		try{
+<b class="fc">&nbsp;			return readLine();</b>
+<b class="fc">&nbsp;		}catch(SocketTimeoutException e){</b>
+<b class="fc">&nbsp;			throw new HttpRequestTimeoutException(&quot;Timed Out while waiting for Request&quot;);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	void sendStatusCode(int code) throws IOException{
+<b class="fc">&nbsp;		sendResponse(new Response(&quot;1.1&quot;).setStatusCode(code));</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Request tryRequest() throws IOException {
+&nbsp;		try {
+&nbsp;			while(true){
+&nbsp;				// Parse request line
+<b class="fc">&nbsp;				String[] requestLine = timedRead().split(&quot; &quot;);</b>
+<b class="fc">&nbsp;				if(requestLine.length != 3){</b>
+<b class="fc">&nbsp;					sendStatusCode(400);</b>
+<b class="fc">&nbsp;					continue;</b>
+&nbsp;				}
+&nbsp;
+<b class="fc">&nbsp;				String method = requestLine[0];</b>
+<b class="fc">&nbsp;				String[] uri = requestLine[1].split(&quot;\\?&quot;);</b>
+<b class="fc">&nbsp;				if(uri.length &gt; 2){</b>
+<b class="nc">&nbsp;					sendStatusCode(400);</b>
+<b class="nc">&nbsp;					continue;</b>
+&nbsp;				}
+&nbsp;
+<b class="fc">&nbsp;				Route route = new Route(method, uri[0]);</b>
+<b class="fc">&nbsp;				if(!requestLine[2].equalsIgnoreCase(&quot;HTTP/1.1&quot;)){</b>
+<b class="nc">&nbsp;					sendStatusCode(505);</b>
+<b class="nc">&nbsp;					continue;</b>
+&nbsp;				}
+&nbsp;
+<b class="fc">&nbsp;				Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;				boolean reset = false;</b>
+<b class="fc">&nbsp;				if(uri.length == 2){</b>
+<b class="nc">&nbsp;					String[] parameters = uri[1].split(&quot;&amp;&quot;);</b>
+<b class="nc">&nbsp;					for(int i = 0; i &lt; parameters.length; i++){</b>
+<b class="nc">&nbsp;						String[] p = parameters[i].split(&quot;=&quot;);</b>
+<b class="nc">&nbsp;						if(p.length != 2){</b>
+<b class="nc">&nbsp;							sendStatusCode(400);</b>
+<b class="nc">&nbsp;							reset = true;</b>
+<b class="nc">&nbsp;							break;</b>
+&nbsp;						}
+<b class="nc">&nbsp;						params.put(p[0], p[1]);</b>
+&nbsp;					}
+&nbsp;				}
+<b class="fc">&nbsp;				if(reset)	continue;</b>
+<b class="fc">&nbsp;				reset = false;</b>
+&nbsp;
+&nbsp;
+&nbsp;				// Parse headers
+<b class="fc">&nbsp;				Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;				List&lt;String&gt; cookies = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;				String line;
+<b class="fc">&nbsp;				while ((line = timedRead()).length() &gt; 0) {</b>
+<b class="fc">&nbsp;					String[] header = line.split(&quot;: &quot;);</b>
+<b class="fc">&nbsp;					if(header.length != 2){</b>
+<b class="nc">&nbsp;						sendStatusCode(400);</b>
+<b class="nc">&nbsp;						reset = true;</b>
+<b class="nc">&nbsp;						break;</b>
+&nbsp;					}
+<b class="fc">&nbsp;					String headerName = header[0].toLowerCase();</b>
+<b class="fc">&nbsp;					String headerValue = header[1];</b>
+&nbsp;
+<b class="fc">&nbsp;					headers.put(headerName, headerValue);</b>
+&nbsp;
+<b class="fc">&nbsp;					if (headerName.equalsIgnoreCase(&quot;cookie&quot;)) {</b>
+<b class="fc">&nbsp;						cookies.addAll(Arrays.asList(headerValue.split(&quot;; &quot;)));</b>
+&nbsp;					}
+<b class="fc">&nbsp;				}</b>
+<b class="fc">&nbsp;				if(reset)	continue;</b>
+<b class="fc">&nbsp;				reset = false;</b>
+&nbsp;
+&nbsp;				// Parse body
+<b class="fc">&nbsp;				String contentLen = headers.get(&quot;content-length&quot;);</b>
+<b class="fc">&nbsp;				String contentEncoding = headers.get(&quot;content-encoding&quot;);</b>
+<b class="fc">&nbsp;				int bodyLen = (contentLen != null) ? Integer.parseInt(contentLen) : 0;</b>
+<b class="fc">&nbsp;				byte[] body = new byte[bodyLen];</b>
+&nbsp;				try{
+<b class="fc">&nbsp;					inputStream.read(body);</b>
+<b class="fc">&nbsp;					body = decode(body, contentEncoding);</b>
+<b class="fc">&nbsp;					if(body == null){</b>
+<b class="nc">&nbsp;						sendStatusCode(400);</b>
+<b class="nc">&nbsp;						continue;</b>
+&nbsp;					}
+<b class="nc">&nbsp;				}catch(SocketTimeoutException e){</b>
+<b class="nc">&nbsp;					throw new HttpRequestTimeoutException(&quot;Request Timed Out&quot;);</b>
+<b class="fc">&nbsp;				}</b>
+&nbsp;
+<b class="fc">&nbsp;				return new Request(route, headers, cookies, params, body);</b>
+&nbsp;			}
+<b class="fc">&nbsp;		} catch (HttpRequestTimeoutException e){</b>
+<b class="fc">&nbsp;			e.printStackTrace();</b>
+<b class="fc">&nbsp;			sendStatusCode(408);</b>
+<b class="fc">&nbsp;			return null;</b>
+<b class="nc">&nbsp;		} catch (IOException e){</b>
+<b class="nc">&nbsp;			e.printStackTrace();</b>
+<b class="nc">&nbsp;			throw e;</b>
+&nbsp;		}
+&nbsp;    }
+&nbsp;
+&nbsp;	private byte[] decode(byte[] body, String contentEncoding) {
+<b class="fc">&nbsp;		if(contentEncoding == null)	return body;</b>
+&nbsp;
+<b class="nc">&nbsp;		ByteArrayInputStream bodyStream = new ByteArrayInputStream(body);</b>
+<b class="nc">&nbsp;		switch(contentEncoding.toLowerCase()){</b>
+&nbsp;			case &quot;gzip&quot;:{
+<b class="nc">&nbsp;				try (GZIPInputStream gzipStream = new GZIPInputStream(bodyStream)) {</b>
+<b class="nc">&nbsp;					return gzipStream.readAllBytes();</b>
+<b class="nc">&nbsp;				} catch (IOException e) {</b>
+<b class="nc">&nbsp;					e.printStackTrace();</b>
+<b class="nc">&nbsp;					return null;</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;			case &quot;deflate&quot;:{
+<b class="nc">&nbsp;				try(InflaterInputStream inflaterStream = new InflaterInputStream(bodyStream)){</b>
+<b class="nc">&nbsp;					return inflaterStream.readAllBytes();</b>
+<b class="nc">&nbsp;				}catch(IOException e){</b>
+<b class="nc">&nbsp;					e.printStackTrace();</b>
+<b class="nc">&nbsp;					return null;</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;			case &quot;compress&quot;:{
+<b class="nc">&nbsp;				try(InflaterInputStream inflaterStream = new InflaterInputStream(bodyStream, new Inflater(true))){</b>
+<b class="nc">&nbsp;					return inflaterStream.readAllBytes();</b>
+<b class="nc">&nbsp;				}catch(IOException e){</b>
+<b class="nc">&nbsp;					e.printStackTrace();</b>
+<b class="nc">&nbsp;					return null;</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;			default:{
+<b class="nc">&nbsp;				return body;</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	public void closeConnection() throws IOException {
+<b class="fc">&nbsp;        socket.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void sendResponse(Response msg) throws IOException {
+<b class="fc">&nbsp;		writer.write(msg.headerString());</b>
+&nbsp;
+&nbsp;		// Header End System
+<b class="fc">&nbsp;		writer.write(&quot;\r\n&quot;);</b>
+<b class="fc">&nbsp;		writer.flush();</b>
+&nbsp;
+&nbsp;		// Full body system
+<b class="fc">&nbsp;		byte[] body = msg.getBody();</b>
+<b class="fc">&nbsp;		if(body != null &amp;&amp; body.length &gt; 0){</b>
+<b class="fc">&nbsp;			outputStream.write(msg.getBody());</b>
+&nbsp;		}
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
+</div>
+</body>
+</html>

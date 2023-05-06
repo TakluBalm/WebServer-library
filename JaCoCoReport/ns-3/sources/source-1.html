@@ -1,0 +1,378 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > HTMLResponse</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: HTMLResponse (server)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">HTMLResponse</td>
+<td class="coverageStat">
+  <span class="percent">
+    77.8%
+  </span>
+  <span class="absValue">
+    (7/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    36.4%
+  </span>
+  <span class="absValue">
+    (47/129)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">HTMLResponse$Loop</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    53.8%
+  </span>
+  <span class="absValue">
+    (7/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    34.6%
+  </span>
+  <span class="absValue">
+    (47/136)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;
+&nbsp;import org.jsoup.Jsoup;
+&nbsp;import org.jsoup.nodes.*;
+&nbsp;
+&nbsp;import server.exceptions.InvalidSyntaxException;
+&nbsp;
+&nbsp;import java.io.BufferedReader;
+&nbsp;import java.io.FileInputStream;
+&nbsp;import java.io.FileReader;
+&nbsp;import java.util.EmptyStackException;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Stack;
+&nbsp;
+&nbsp;public class HTMLResponse extends Response {
+&nbsp;    String htmlPath;
+&nbsp;
+&nbsp;    public HTMLResponse(String version, String htmlPath) {
+<b class="fc">&nbsp;        super(version);</b>
+<b class="fc">&nbsp;        this.htmlPath = htmlPath;</b>
+<b class="fc">&nbsp;        this.setHeader(&quot;Content-Type&quot;, &quot;text/html&quot;);</b>
+<b class="fc">&nbsp;        this.setBody(this.htmlPath);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public HTMLResponse setBody(String htmlPath) {
+<b class="fc">&nbsp;        byte[] body = null;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            FileInputStream fis = new FileInputStream(htmlPath);</b>
+<b class="fc">&nbsp;            body = fis.readAllBytes();</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            System.out.println(7);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        super.setBody(body);</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public HTMLResponse setBodyFromString(String document) {
+<b class="fc">&nbsp;        byte[] body = document.getBytes();</b>
+<b class="fc">&nbsp;        super.setBody(body);</b>
+&nbsp;
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        StringBuilder builder = new StringBuilder();</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            BufferedReader br = new BufferedReader(new FileReader(htmlPath));</b>
+&nbsp;            String line;
+<b class="fc">&nbsp;            while ((line = br.readLine()) != null) {</b>
+<b class="fc">&nbsp;                builder.append(line + &quot;\n&quot;);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            br.close();</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            System.out.println(e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        return builder.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;	private void ParseWithContext(Element root, Map&lt;String, Resource&gt; context) throws Exception{
+&nbsp;		// System.out.println(root.tagName()+&quot;:&quot;+root.childNodes());
+<b class="fc">&nbsp;		for (Attribute attribute : root.attributes()) {</b>
+<b class="fc">&nbsp;			if (attribute.getKey().equals(&quot;__attrs__&quot;)) {</b>
+<b class="nc">&nbsp;				String value = attribute.getValue();</b>
+&nbsp;				// src = /resource/%source; alt = %text
+<b class="nc">&nbsp;				String[] attributesToChange = value.split(&quot;;&quot;);</b>
+<b class="nc">&nbsp;				for (String entry : attributesToChange) {</b>
+<b class="nc">&nbsp;					String[] attrVal = entry.split(&quot;=&quot;);</b>
+<b class="nc">&nbsp;					if (attrVal.length != 2) {</b>
+<b class="nc">&nbsp;						throw new InvalidSyntaxException(&quot;Invalid syntax on element &quot; + root.tagName());</b>
+&nbsp;					}
+&nbsp;
+<b class="nc">&nbsp;					String val = attrVal[1].strip();</b>
+&nbsp;
+<b class="nc">&nbsp;					StringBuilder builder = new StringBuilder();</b>
+<b class="nc">&nbsp;					for (int i = 0; i &lt; val.length(); i++) {</b>
+<b class="nc">&nbsp;						if (val.charAt(i) == &#39;%&#39;) {</b>
+<b class="nc">&nbsp;							int start = ++i;</b>
+<b class="nc">&nbsp;							if (i &gt;= val.length()) {</b>
+<b class="nc">&nbsp;								throw new InvalidSyntaxException(&quot;Invalid syntax&quot;);</b>
+&nbsp;							}
+<b class="nc">&nbsp;							if (checkAlpha(val.charAt(i))) {</b>
+<b class="nc">&nbsp;								while (i &lt; val.length() &amp;&amp; isValid(val.charAt(i))) {</b>
+<b class="nc">&nbsp;									i++;</b>
+&nbsp;								}
+<b class="nc">&nbsp;								if (context.get(val.substring(start, i)) == null) {</b>
+<b class="nc">&nbsp;									throw new InvalidSyntaxException(&quot;Variable value not provided&quot;);</b>
+&nbsp;								}
+<b class="nc">&nbsp;								builder.append(context.get(val.substring(start, i)).getData());</b>
+<b class="nc">&nbsp;								i--;</b>
+<b class="nc">&nbsp;							} else if (val.charAt(i) == &#39;%&#39;) {</b>
+<b class="nc">&nbsp;								builder.append(&#39;%&#39;);</b>
+&nbsp;							}
+<b class="nc">&nbsp;						} else {</b>
+<b class="nc">&nbsp;							builder.append(val.charAt(i));</b>
+&nbsp;						}
+&nbsp;					}
+&nbsp;
+<b class="nc">&nbsp;					root.attr(attrVal[0].strip(), builder.toString());</b>
+&nbsp;				}
+<b class="nc">&nbsp;				root.removeAttr(&quot;__attrs__&quot;);</b>
+&nbsp;
+&nbsp;			}
+<b class="fc">&nbsp;		}</b>
+&nbsp;
+<b class="fc">&nbsp;		for (TextNode node : root.textNodes()) {</b>
+<b class="fc">&nbsp;			String nodeText = node.text().strip();</b>
+<b class="fc">&nbsp;			if (nodeText.startsWith(&quot;{{&quot;) &amp;&amp; nodeText.endsWith(&quot;}}&quot;)) {</b>
+<b class="nc">&nbsp;				String actualText = nodeText.substring(2, nodeText.length() - 2);</b>
+<b class="nc">&nbsp;				StringBuilder builder = new StringBuilder();</b>
+<b class="nc">&nbsp;				for (int i = 0; i &lt; actualText.length(); i++) {</b>
+<b class="nc">&nbsp;					if (actualText.charAt(i) == &#39;%&#39;) {</b>
+<b class="nc">&nbsp;						int start = ++i;</b>
+<b class="nc">&nbsp;						if (i &gt;= actualText.length()) {</b>
+<b class="nc">&nbsp;							throw new InvalidSyntaxException(&quot;Invalid syntax&quot;);</b>
+&nbsp;						}
+<b class="nc">&nbsp;						if (checkAlpha(actualText.charAt(i))) {</b>
+<b class="nc">&nbsp;							while (i &lt; actualText.length() &amp;&amp; isValid(actualText.charAt(i))) {</b>
+<b class="nc">&nbsp;								i++;</b>
+&nbsp;							}
+<b class="nc">&nbsp;							if (context.get(actualText.substring(start, i)) == null) {</b>
+<b class="nc">&nbsp;								throw new InvalidSyntaxException(&quot;Variable value not provided&quot;);</b>
+&nbsp;							}
+<b class="nc">&nbsp;							builder.append(context.get(actualText.substring(start, i)).getData());</b>
+<b class="nc">&nbsp;							i--;</b>
+<b class="nc">&nbsp;						} else if (actualText.charAt(i) == &#39;%&#39;) {</b>
+<b class="nc">&nbsp;							builder.append(&#39;%&#39;);</b>
+&nbsp;						}
+<b class="nc">&nbsp;					} else {</b>
+<b class="nc">&nbsp;						builder.append(actualText.charAt(i));</b>
+&nbsp;					}
+&nbsp;				}
+<b class="nc">&nbsp;				node.text(builder.toString());</b>
+&nbsp;			}
+<b class="fc">&nbsp;		}</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	class Loop{
+&nbsp;		Iterator&lt;?&gt; itr;
+&nbsp;		String variable;
+&nbsp;		int startIdx;
+&nbsp;
+<b class="nc">&nbsp;		public Loop(Iterable&lt;?&gt; loopIterable, String loopVar, int startIdx){</b>
+<b class="nc">&nbsp;			itr = loopIterable.iterator();</b>
+<b class="nc">&nbsp;			variable = loopVar;</b>
+<b class="nc">&nbsp;			this.startIdx = startIdx;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		public Object getNext(){
+<b class="nc">&nbsp;			return itr.next();</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		public String getVariable(){
+<b class="nc">&nbsp;			return variable;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		public boolean hasNext(){
+<b class="nc">&nbsp;			return itr.hasNext();</b>
+&nbsp;		}
+&nbsp;
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	private Element embedDataHelper(Element root, Map&lt;String, Resource&gt; context) throws Exception{
+<b class="fc">&nbsp;		List&lt;Node&gt; nodes = root.childNodes();</b>
+<b class="fc">&nbsp;		Stack&lt;Loop&gt; loops = new Stack&lt;&gt;();</b>
+<b class="fc">&nbsp;		int skip = 0;</b>
+&nbsp;
+<b class="fc">&nbsp;		Element element = new Element(root.tag(), root.baseUri(), root.attributes().clone());</b>
+&nbsp;
+<b class="fc">&nbsp;		for(int i = 0; i &lt; nodes.size(); i++){</b>
+<b class="fc">&nbsp;			Node node = nodes.get(i);</b>
+<b class="fc">&nbsp;			if(node instanceof Element &amp;&amp; skip == 0){</b>
+<b class="fc">&nbsp;				element.appendChild(embedDataHelper((Element)node, context));</b>
+<b class="fc">&nbsp;			}else if(node instanceof TextNode){</b>
+<b class="fc">&nbsp;				String text = ((TextNode)node).text().strip();</b>
+<b class="fc">&nbsp;				if(text.startsWith(&quot;{%&quot;) &amp;&amp; text.endsWith(&quot;%}&quot;)){</b>
+<b class="nc">&nbsp;					String actualText = text.substring(2, text.length()-2).strip();</b>
+<b class="nc">&nbsp;					String[] tokens = actualText.split(&quot; &quot;);</b>
+&nbsp;					
+<b class="nc">&nbsp;					if(tokens.length == 4 &amp;&amp; tokens[0].equals(&quot;for&quot;) &amp;&amp; tokens[2].equals(&quot;in&quot;)){</b>
+<b class="nc">&nbsp;						Resource resource = context.get(tokens[3]);</b>
+<b class="nc">&nbsp;						if(resource != null){</b>
+<b class="nc">&nbsp;							Loop loop = new Loop((Iterable&lt;?&gt;)resource.getData(), tokens[1], i);</b>
+<b class="nc">&nbsp;							loops.push(loop);</b>
+<b class="nc">&nbsp;							if(loop.hasNext()){</b>
+<b class="nc">&nbsp;								Object val = loop.getNext();</b>
+<b class="nc">&nbsp;								Resource r = new Resource(&quot;text&quot;);</b>
+<b class="nc">&nbsp;								r.loadData(val);</b>
+<b class="nc">&nbsp;								context.put(loop.getVariable(), r);</b>
+<b class="nc">&nbsp;							}else{</b>
+<b class="nc">&nbsp;								skip++;</b>
+&nbsp;							}
+<b class="nc">&nbsp;						}else{</b>
+<b class="nc">&nbsp;							throw new InvalidSyntaxException(&quot;Resouce not provided&quot;);</b>
+&nbsp;						}
+<b class="nc">&nbsp;					}else if(tokens.length == 2 &amp;&amp; tokens[0].equals(&quot;end&quot;) &amp;&amp; tokens[1].equals(&quot;for&quot;)){</b>
+&nbsp;						try{
+<b class="nc">&nbsp;							Loop loop = loops.pop();</b>
+<b class="nc">&nbsp;							if(loop.hasNext()){</b>
+<b class="nc">&nbsp;								loops.push(loop);</b>
+<b class="nc">&nbsp;								Resource r = new Resource(&quot;text&quot;);</b>
+<b class="nc">&nbsp;								r.loadData(loop.getNext());</b>
+<b class="nc">&nbsp;								context.put(loop.getVariable(), r);</b>
+<b class="nc">&nbsp;								i = loop.startIdx;</b>
+<b class="nc">&nbsp;							}else{</b>
+<b class="nc">&nbsp;								context.remove(loop.getVariable());</b>
+<b class="nc">&nbsp;								if(skip &gt; 0)	skip--;</b>
+&nbsp;							}
+<b class="nc">&nbsp;						}catch(EmptyStackException e){</b>
+<b class="nc">&nbsp;							throw new InvalidSyntaxException(&quot;The Syntax of the HTML file is invalid&quot;);</b>
+<b class="nc">&nbsp;						}</b>
+&nbsp;					}
+<b class="nc">&nbsp;				}else{</b>
+<b class="fc">&nbsp;					TextNode copy = new TextNode(((TextNode) node).text());</b>
+<b class="fc">&nbsp;					element.appendChild(copy);</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		ParseWithContext(element, context);</b>
+&nbsp;		// System.out.println(element.html());
+<b class="fc">&nbsp;		return element;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;    public HTMLResponse embedData(Map&lt;String, Resource&gt; mp) throws Exception {
+&nbsp;
+<b class="fc">&nbsp;        Document parsedHTML = Jsoup.parse(this.toString());</b>
+<b class="fc">&nbsp;		Element parsedRoot = embedDataHelper(parsedHTML.root(), mp);</b>
+&nbsp;
+<b class="fc">&nbsp;        System.out.println(parsedRoot.html());</b>
+<b class="fc">&nbsp;        setBodyFromString(parsedRoot.html());</b>
+<b class="fc">&nbsp;        return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean checkAlpha(char c) {
+<b class="nc">&nbsp;        return (c &lt;= &#39;z&#39; &amp;&amp; c &gt;= &#39;a&#39;) || (c &lt;= &#39;Z&#39; &amp;&amp; c &gt;= &#39;A&#39;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isValid(char c) {
+&nbsp;
+<b class="nc">&nbsp;        return checkAlpha(c) || c == &#39;_&#39; || (c &lt;= &#39;9&#39; &amp;&amp; c &gt;= &#39;0&#39;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
+</div>
+</body>
+</html>

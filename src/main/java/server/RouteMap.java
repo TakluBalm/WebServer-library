@@ -143,7 +143,7 @@ public class RouteMap implements Map<Route, Invocation>{
 		Node cur = root;
 
 		for(int i = 0; i < steps.length; i++){
-			if(steps[i].length() > 0 && steps[i].charAt(0) == '{' && steps[i].charAt(steps.length-1) == '}'){
+			if(steps[i].length() > 0 && steps[i].charAt(0) == '{' && steps[i].charAt(steps[i].length()-1) == '}'){
 				steps[i] = "__var__";
 			}
 			Node next = cur.next.get(steps[i]);

@@ -1,0 +1,296 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > Server</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">server</a>
+</div>
+
+<h1>Coverage Summary for Class: Server (server)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Server</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (5/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    71.1%
+  </span>
+  <span class="absValue">
+    (32/45)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Server$Master</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (8/10)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Server$Worker</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.9%
+  </span>
+  <span class="absValue">
+    (16/18)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (9/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    76.7%
+  </span>
+  <span class="absValue">
+    (56/73)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package server;
+&nbsp;import io.github.classgraph.*;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.lang.reflect.Constructor;
+&nbsp;import java.lang.reflect.InvocationTargetException;
+&nbsp;import java.lang.reflect.Method;
+&nbsp;import java.net.*;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.concurrent.*;
+&nbsp;
+&nbsp;public class Server {
+&nbsp;
+&nbsp;    ServerSocket socket;
+&nbsp;    Thread master;
+&nbsp;    boolean running;
+&nbsp;    ClassInfoList controllerClasses;
+<b class="fc">&nbsp;    Map&lt;Route, Invocation&gt; mapper = new RouteMap();</b>
+&nbsp;	ExecutorService pool;
+&nbsp;	Properties properties;
+&nbsp;
+<b class="fc">&nbsp;    class Master implements Runnable{</b>
+&nbsp;        @Override
+&nbsp;        public void run() {
+&nbsp;            try {
+<b class="fc">&nbsp;                while (running) {</b>
+&nbsp;                    try {
+<b class="fc">&nbsp;                        Socket clientSocket = socket.accept();</b>
+<b class="fc">&nbsp;                        HTTPSocket clientHttpSocket = new HTTPSocket(clientSocket, properties.inactivityTimeout);</b>
+<b class="fc">&nbsp;                        Worker servant = new Worker(clientHttpSocket);</b>
+<b class="fc">&nbsp;                        pool.submit(servant);</b>
+<b class="fc">&nbsp;                    }catch (SocketTimeoutException e){}</b>
+&nbsp;                }
+<b class="nc">&nbsp;            }catch (Exception e) {</b>
+<b class="nc">&nbsp;                System.out.println(e);</b>
+<b class="fc">&nbsp;            }</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    class Worker implements Runnable{
+&nbsp;        HTTPSocket clientSocket;
+&nbsp; 
+<b class="fc">&nbsp;		public Worker(HTTPSocket clientsocket){</b>
+<b class="fc">&nbsp;            this.clientSocket = clientsocket;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        @Override
+&nbsp;        public void run() {
+&nbsp;			try{
+&nbsp;                while(true) {
+<b class="fc">&nbsp;					Request r = clientSocket.tryRequest();</b>
+<b class="fc">&nbsp;					if(r == null){</b>
+<b class="fc">&nbsp;						throw new IOException();</b>
+&nbsp;					}
+<b class="fc">&nbsp;					Invocation invocation = mapper.get(r.route);</b>
+<b class="fc">&nbsp;					if(invocation == null){</b>
+<b class="fc">&nbsp;						clientSocket.sendResponse(new Response(&quot;1.1&quot;).setStatusCode(404));</b>
+<b class="fc">&nbsp;						continue;</b>
+&nbsp;					}
+&nbsp;					try{
+<b class="fc">&nbsp;						Response response = (Response)invocation.invoke(r);</b>
+<b class="fc">&nbsp;						clientSocket.sendResponse(response);</b>
+<b class="nc">&nbsp;					}catch(InvocationTargetException e){</b>
+<b class="nc">&nbsp;						clientSocket.sendResponse(new Response(&quot;1.1&quot;).setStatusCode(500));</b>
+<b class="fc">&nbsp;					}</b>
+<b class="fc">&nbsp;                }</b>
+<b class="fc">&nbsp;			}catch(IOException e){</b>
+&nbsp;				try{
+<b class="fc">&nbsp;					clientSocket.closeConnection();</b>
+<b class="fc">&nbsp;				}catch(Exception ee){}</b>
+&nbsp;				return;
+&nbsp;			}
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;	public Server(Properties properties){</b>
+<b class="nc">&nbsp;		this.properties = properties;</b>
+&nbsp;	}
+&nbsp;
+<b class="fc">&nbsp;	public Server(){</b>
+<b class="fc">&nbsp;		this.properties = new Properties();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void updateProperties(Properties properties){
+<b class="nc">&nbsp;		throw new UnsupportedOperationException(&quot;Reloading with new propeties is not yet supported\n&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;    public void start() throws IOException {
+&nbsp;        try {
+<b class="fc">&nbsp;            ScanResult sr = new ClassGraph().enableAllInfo().scan();</b>
+<b class="fc">&nbsp;            sr.getAllClasses().forEach(classInfo -&gt; {</b>
+<b class="fc">&nbsp;                AnnotationInfo u = classInfo.getAnnotationInfo(&quot;server.Controller&quot;);</b>
+<b class="fc">&nbsp;                if(u != null){</b>
+<b class="fc">&nbsp;                    Class&lt;?&gt; annotatedClass = classInfo.loadClass();</b>
+<b class="fc">&nbsp;                    Method[] classMethods = annotatedClass.getDeclaredMethods();</b>
+&nbsp;
+&nbsp;                    try {
+&nbsp;
+<b class="fc">&nbsp;                        Constructor&lt;?&gt; c = annotatedClass.getDeclaredConstructor();</b>
+<b class="fc">&nbsp;                        Object object = c.newInstance();</b>
+&nbsp;
+<b class="fc">&nbsp;                        for(Method callableMethod: classMethods){</b>
+<b class="fc">&nbsp;                            if(callableMethod.isAnnotationPresent(MethodHandler.class)){</b>
+<b class="fc">&nbsp;                                Controller controller = annotatedClass.getAnnotation(server.Controller.class);</b>
+<b class="fc">&nbsp;                                MethodHandler handler = callableMethod.getAnnotation(server.MethodHandler.class);</b>
+&nbsp;
+<b class="fc">&nbsp;								if(!Response.class.isAssignableFrom(callableMethod.getReturnType())){</b>
+<b class="nc">&nbsp;									System.out.println(annotatedClass.getName()+&quot;: &quot;+ callableMethod.getName() +&quot; does not return proper type&quot;);</b>
+<b class="nc">&nbsp;									continue;</b>
+&nbsp;								}
+<b class="fc">&nbsp;								Class&lt;?&gt;[] ptypes = callableMethod.getParameterTypes();</b>
+<b class="fc">&nbsp;								if(ptypes.length != 1 || !ptypes[0].isAssignableFrom(Request.class)){</b>
+<b class="nc">&nbsp;									System.out.println(annotatedClass.getName()+&quot;: &quot;+ callableMethod.getName() +&quot; does not accept proper parameters&quot;);</b>
+<b class="nc">&nbsp;									continue;</b>
+&nbsp;								}
+&nbsp;
+<b class="fc">&nbsp;                                Route route = new Route(handler.method(), controller.URL());</b>
+<b class="fc">&nbsp;                                Invocation invocation = new Invocation(object, callableMethod, route.Path);</b>
+&nbsp;
+<b class="fc">&nbsp;                                mapper.put(route, invocation);</b>
+&nbsp;                            }
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                    } catch (Exception e) {</b>
+<b class="nc">&nbsp;                        System.out.println(e);</b>
+<b class="nc">&nbsp;                        e.printStackTrace();</b>
+<b class="fc">&nbsp;                    }</b>
+&nbsp;                }
+&nbsp;            });
+<b class="fc">&nbsp;			pool = Executors.newFixedThreadPool(properties.poolSize);</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            System.out.println(e);</b>
+<b class="nc">&nbsp;            System.exit(-1);</b>
+<b class="fc">&nbsp;        }</b>
+<b class="fc">&nbsp;        socket = new ServerSocket(8080);</b>
+<b class="fc">&nbsp;        running = true;</b>
+<b class="fc">&nbsp;        socket.setSoTimeout(500);</b>
+<b class="fc">&nbsp;        master = new Thread(new Master());</b>
+<b class="fc">&nbsp;        master.start();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void stop() throws IOException, InterruptedException {
+<b class="fc">&nbsp;        running = false;</b>
+<b class="fc">&nbsp;        master.join();</b>
+<b class="fc">&nbsp;        socket.close();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
+</div>
+</body>
+</html>

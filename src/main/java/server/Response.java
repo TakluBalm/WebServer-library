@@ -62,7 +62,7 @@ public class Response {
 		this.version = version;
 	}
 
-	protected Response setHeader(String field, String value){
+	public Response setHeader(String field, String value){
 		this.headers.put(field.toLowerCase(), value);
 		return this;
 	}

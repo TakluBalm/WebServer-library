@@ -2,6 +2,8 @@ package server;
 
 import org.junit.jupiter.api.Test;
 
+import server.JsonBuilder;
+
 public class JsonBuilderTest {
     @Test
     public void testAdd() {

@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html id="htmlId">
 <head>
-  <title>Coverage Report > HttpException</title>
+  <title>Coverage Report > Config</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -18,10 +18,10 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">server.exceptions</a>
+    <a href="../index.html">ORM.Manager</a>
 </div>
 
-<h1>Coverage Summary for Class: HttpException (server.exceptions)</h1>
+<h1>Coverage Summary for Class: Config (ORM.Manager)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -40,7 +40,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">HttpException</td>
+  <td class="name">Config</td>
 <td class="coverageStat">
   <span class="percent">
     100%
@@ -62,7 +62,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (4/4)
   </span>
 </td>
 </tr>
@@ -74,12 +74,18 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 
 <pre>
-<code class="sourceCode" id="sourceCode">&nbsp;package server.exceptions;
+<code class="sourceCode" id="sourceCode">&nbsp;package ORM.Manager;
 &nbsp;
-&nbsp;public class HttpException extends Exception{
-&nbsp;	public HttpException(String message){
-<b class="fc">&nbsp;		super(message);</b>
-&nbsp;	}
+&nbsp;public class Config {
+&nbsp;    String url;
+&nbsp;    String username;
+&nbsp;    String password;
+&nbsp;
+<b class="fc">&nbsp;    Config(String url,String username,String password){</b>
+<b class="fc">&nbsp;        this.url = url;</b>
+<b class="fc">&nbsp;        this.username = username;</b>
+<b class="fc">&nbsp;        this.password = password;</b>
+&nbsp;    }
 &nbsp;}
 </code>
 </pre>
@@ -104,7 +110,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2023-04-27 18:34</div>
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
 </div>
 </body>
 </html>

@@ -4,6 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import server.Controller;
+import server.HTMLResponse;
+import server.MethodHandler;
+import server.Request;
+import server.Resource;
+import server.Response;
+
 
 @Controller(URL="/test/html")
 public class HTMLTestClass {

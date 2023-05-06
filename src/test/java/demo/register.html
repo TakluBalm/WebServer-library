@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Login Page</title>
+	<style>
+		body {
+	font-family: Arial, sans-serif;
+}
+
+.login-container {
+	margin: 0 auto;
+	max-width: 400px;
+	padding: 20px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	background-color: #f2f2f2;
+}
+
+h1 {
+	text-align: center;
+	margin-top: 0;
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+}
+
+label {
+	margin-bottom: 5px;
+}
+
+input[type=text], input[type=password] {
+	padding: 10px;
+	margin-bottom: 10px;
+	border-radius: 5px;
+	border: none;
+}
+
+input[type=submit] {
+	background-color: #4CAF50;
+	color: white;
+	padding: 10px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+input[type=submit]:hover {
+	background-color: #45a049;
+}
+
+	</style>
+</head>
+<body>
+	<div class="register-container">
+		<h1>Register</h1>
+		<form method="POST" action="/register" enctype="application/x-www-form-urlencoded">
+			<label for="username">Username:</label>
+			<input type="text" id="username" name="username" required>
+
+			<label for="password">Password:</label>
+			<input type="password" id="password" name="password" required>
+
+			<input type="submit" value="Register">
+		</form>
+	</div>
+
+	<script>
+		// add event listener to form submit event
+		document.querySelector('form').addEventListener('submit', function(event) {
+			// get the value of the password input
+			const password = document.getElementById('password').value;
+			// define regular expressions to check for uppercase letters and numbers
+			const uppercaseRegex = /[A-Z]/;
+			const numberRegex = /\d/;
+			// check if the password contains at least one uppercase letter and one number
+			if (!uppercaseRegex.test(password) || !numberRegex.test(password)) {
+				// if not, prevent the form from being submitted and show an error message
+				event.preventDefault();
+				alert('Password must contain at least one uppercase letter and one number');
+			}
+		});
+	</script>
+</body>
+</html>
+

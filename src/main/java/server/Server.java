@@ -132,9 +132,8 @@ public class Server {
             System.out.println(e);
             System.exit(-1);
         }
-        socket = new ServerSocket(8080);
+        socket = new ServerSocket(properties.port);
         running = true;
-        socket.setSoTimeout(500);
         master = new Thread(new Master());
         master.start();
     }

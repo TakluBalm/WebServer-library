@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html id="htmlId">
 <head>
-  <title>Coverage Report > HttpInvalidException</title>
+  <title>Coverage Report > Configuration</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -18,10 +18,10 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">server.exceptions</a>
+    <a href="../index.html">ORM.Manager</a>
 </div>
 
-<h1>Coverage Summary for Class: HttpInvalidException (server.exceptions)</h1>
+<h1>Coverage Summary for Class: Configuration (ORM.Manager)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -40,29 +40,29 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">HttpInvalidException</td>
+  <td class="name">Configuration</td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    100%
   </span>
   <span class="absValue">
-    (0/1)
+    (1/1)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    100%
   </span>
   <span class="absValue">
-    (0/1)
+    (4/4)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    77.3%
   </span>
   <span class="absValue">
-    (0/1)
+    (17/22)
   </span>
 </td>
 </tr>
@@ -74,12 +74,57 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 
 <pre>
-<code class="sourceCode" id="sourceCode">&nbsp;package server.exceptions;
+<code class="sourceCode" id="sourceCode">&nbsp;package ORM.Manager;
+&nbsp;import java.io.*;
+&nbsp;import java.sql.*;
+&nbsp;import java.lang.*;
+&nbsp;import java.util.*;
 &nbsp;
-&nbsp;public class HttpInvalidException extends HttpException{
-&nbsp;	public HttpInvalidException(String message){
-<b class="nc">&nbsp;		super(message);</b>
-&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;//Configuration configures the database connection based configPath xml, create SessionFactory and creates Table
+&nbsp;public class Configuration {
+&nbsp;    private String configPath;
+&nbsp;    private SessionFactory sessionFactory;
+&nbsp;
+&nbsp;    private Config configObj;
+&nbsp;
+&nbsp;    private SessionFactory ssnf;
+&nbsp;
+<b class="fc">&nbsp;    private boolean reset = false;</b>
+<b class="nc">&nbsp;    public Configuration(String configPath){</b>
+<b class="nc">&nbsp;        this.configPath = configPath;</b>
+<b class="nc">&nbsp;        config();</b>
+&nbsp;    }
+<b class="fc">&nbsp;    public Configuration(String configPath,boolean reset){</b>
+<b class="fc">&nbsp;        this.configPath = configPath;</b>
+<b class="fc">&nbsp;        this.reset = reset;</b>
+<b class="fc">&nbsp;        config();</b>
+&nbsp;    }
+&nbsp;    private void config(){
+&nbsp;        //TODO: configures the database connection based configPath and xml create session factory
+&nbsp;        try {
+<b class="fc">&nbsp;            FileInputStream fis=new FileInputStream(this.configPath);</b>
+<b class="fc">&nbsp;            Properties p=new Properties ();</b>
+<b class="fc">&nbsp;            p.load(fis);</b>
+<b class="fc">&nbsp;            String url= (String)p.get(&quot;URL&quot;);</b>
+<b class="fc">&nbsp;            String username= (String)p.get(&quot;User&quot;);</b>
+<b class="fc">&nbsp;            String password= (String)p.get(&quot;Password&quot;);</b>
+<b class="fc">&nbsp;            configObj = new Config(url,username,password); //create config OBJ</b>
+<b class="fc">&nbsp;            fis.close();</b>
+<b class="nc">&nbsp;        }catch (Exception e){</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Error in reading configuration file! ERROR: &quot;+e.toString());</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    public SessionFactory getFactory() throws Exception{
+<b class="fc">&nbsp;        if(ssnf==null)</b>
+<b class="fc">&nbsp;            ssnf = new SessionFactory(configObj,this.reset);</b>
+<b class="fc">&nbsp;        return ssnf;</b>
+&nbsp;    }
 &nbsp;}
 </code>
 </pre>
@@ -104,7 +149,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2023-04-27 18:34</div>
+    <div style="float:right;">generated on 2023-05-04 22:25</div>
 </div>
 </body>
 </html>
