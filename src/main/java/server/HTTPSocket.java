@@ -138,7 +138,7 @@ public class HTTPSocket {
 			}
 		} catch (HttpRequestTimeoutException e){
 			e.printStackTrace();
-			// sendStatusCode(408);
+			 sendStatusCode(408);
 			return null;
 		} catch (IOException e){
 			e.printStackTrace();

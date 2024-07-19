@@ -133,6 +133,7 @@ public class Server {
             System.exit(-1);
         }
         socket = new ServerSocket(properties.port);
+        socket.setSoTimeout(10);
         running = true;
         master = new Thread(new Master());
         master.start();
